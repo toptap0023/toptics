@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="116" fill="#000000"/>
+  <!-- "T" monogram in white -->
+  <rect x="120" y="156" width="272" height="64" rx="14" fill="#ffffff"/>
+  <rect x="224" y="156" width="64" height="232" rx="14" fill="#ffffff"/>
+  <!-- blue dot accent (matches the CTA blue), echoing the i-dot in "TOPtics" -->
+  <circle cx="392" cy="148" r="42" fill="#0a84ff"/>
+</svg>
