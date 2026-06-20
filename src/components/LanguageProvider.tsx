@@ -9,10 +9,12 @@ import {
 } from "react";
 import { translate, type Lang } from "@/lib/i18n";
 
+type TParams = Record<string, string | number>;
+
 interface LangContext {
   lang: Lang;
   setLang: (l: Lang) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: TParams) => string;
 }
 
 const Ctx = createContext<LangContext>({
@@ -53,7 +55,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = l;
   }, []);
 
-  const t = useCallback((key: string) => translate(lang, key), [lang]);
+  const t = useCallback(
+    (key: string, params?: TParams) => translate(lang, key, params),
+    [lang]
+  );
 
   return (
     <Ctx.Provider value={{ lang, setLang, t }}>{children}</Ctx.Provider>

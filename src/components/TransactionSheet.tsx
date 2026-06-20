@@ -9,6 +9,7 @@ import {
   updateTransaction,
 } from "@/app/(app)/actions";
 import { CategoryGlyph, CloseIcon, PlusIcon } from "@/components/icons";
+import { useI18n } from "@/components/LanguageProvider";
 
 /** Shift a YYYY-MM-DD date by a number of days (UTC-safe). */
 function shiftDays(iso: string, days: number): string {
@@ -78,6 +79,7 @@ export function TransactionSheet({
   trigger,
 }: Props) {
   const router = useRouter();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<"income" | "expense">(
     initial?.type ?? "expense"
@@ -135,7 +137,7 @@ export function TransactionSheet({
       ) : (
         <button
           onClick={() => setOpen(true)}
-          aria-label="Add transaction"
+          aria-label={t("tx.add")}
           className="fixed bottom-[88px] right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-teal text-bg shadow-glow transition-transform duration-200 hover:bg-teal-dark active:scale-95 cursor-pointer"
           style={{ marginBottom: "env(safe-area-inset-bottom)" }}
         >
@@ -148,7 +150,7 @@ export function TransactionSheet({
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
           role="dialog"
           aria-modal="true"
-          aria-label={isEdit ? "Edit transaction" : "Add transaction"}
+          aria-label={isEdit ? t("tx.edit") : t("tx.add")}
         >
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -157,11 +159,11 @@ export function TransactionSheet({
           <div className="relative flex w-full flex-col sm:max-w-md bg-bg-soft border-t sm:border border-line sm:rounded-2xl rounded-t-2xl shadow-card max-h-[92dvh] overflow-hidden">
             <div className="flex flex-none items-center justify-between px-5 py-4 border-b border-line">
               <h2 className="text-lg font-bold">
-                {isEdit ? "Edit transaction" : "New transaction"}
+                {isEdit ? t("tx.edit") : t("tx.new")}
               </h2>
               <button
                 onClick={() => setOpen(false)}
-                aria-label="Close"
+                aria-label={t("common.close")}
                 className="grid h-9 w-9 place-items-center rounded-lg text-ink-muted hover:text-ink hover:bg-bg-panel transition-colors duration-200 cursor-pointer"
               >
                 <CloseIcon className="w-5 h-5" />
@@ -179,23 +181,23 @@ export function TransactionSheet({
 
               {/* Type toggle */}
               <div className="grid grid-cols-2 gap-1 rounded-xl bg-bg-panel p-1">
-                {(["expense", "income"] as const).map((t) => (
+                {(["expense", "income"] as const).map((ty) => (
                   <button
-                    key={t}
+                    key={ty}
                     type="button"
                     onClick={() => {
-                      setType(t);
+                      setType(ty);
                       setSelectedCat("");
                     }}
-                    className={`rounded-lg py-2.5 text-sm font-semibold capitalize transition-colors duration-200 cursor-pointer ${
-                      type === t
-                        ? t === "income"
+                    className={`rounded-lg py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer ${
+                      type === ty
+                        ? ty === "income"
                           ? "bg-pos text-bg"
                           : "bg-neg text-bg"
                         : "text-ink-muted hover:text-ink"
                     }`}
                   >
-                    {t}
+                    {ty === "income" ? t("common.income") : t("common.expense")}
                   </button>
                 ))}
               </div>
@@ -208,7 +210,7 @@ export function TransactionSheet({
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="amount" className="text-sm font-medium text-ink-muted">
-                  Amount
+                  {t("tx.amount")}
                 </label>
                 <input
                   ref={firstFieldRef}
@@ -229,7 +231,7 @@ export function TransactionSheet({
 
               <div className="flex flex-col gap-2">
                 <span className="text-sm font-medium text-ink-muted">
-                  Category
+                  {t("tx.category")}
                 </span>
                 <input type="hidden" name="category_id" value={selectedCat} />
                 <div className="grid grid-cols-4 gap-2">
@@ -270,7 +272,7 @@ export function TransactionSheet({
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="occurred_on" className="text-sm font-medium text-ink-muted">
-                  Date
+                  {t("tx.date")}
                 </label>
                 <input
                   id="occurred_on"
@@ -284,14 +286,14 @@ export function TransactionSheet({
                 <div className="flex flex-wrap gap-2 pt-0.5">
                   {(
                     [
-                      { label: "Yesterday", value: shiftDays(today, -1) },
-                      { label: "Last month", value: shiftMonths(today, -1) },
+                      { key: "tx.yesterday", value: shiftDays(today, -1) },
+                      { key: "tx.lastMonth", value: shiftMonths(today, -1) },
                     ] as const
                   ).map((q) => {
                     const active = date === q.value;
                     return (
                       <button
-                        key={q.label}
+                        key={q.key}
                         type="button"
                         onClick={() => setDate(q.value)}
                         aria-pressed={active}
@@ -301,7 +303,7 @@ export function TransactionSheet({
                             : "border-line bg-bg-panel2 text-ink-muted hover:text-ink"
                         }`}
                       >
-                        {q.label}
+                        {t(q.key)}
                       </button>
                     );
                   })}
@@ -310,7 +312,8 @@ export function TransactionSheet({
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="note" className="text-sm font-medium text-ink-muted">
-                  Note <span className="text-ink-muted/60">(optional)</span>
+                  {t("tx.note")}{" "}
+                  <span className="text-ink-muted/60">{t("tx.optional")}</span>
                 </label>
                 <input
                   id="note"
@@ -318,7 +321,7 @@ export function TransactionSheet({
                   type="text"
                   maxLength={120}
                   defaultValue={initial?.note ?? ""}
-                  placeholder="e.g. Lunch with team"
+                  placeholder={t("tx.notePlaceholder")}
                   className="rounded-xl bg-bg-panel border border-line px-4 py-3 focus:border-teal"
                 />
               </div>
@@ -336,10 +339,10 @@ export function TransactionSheet({
                   className="w-full rounded-xl bg-teal px-4 py-3.5 font-semibold text-bg shadow-glow transition-colors duration-200 hover:bg-teal-dark disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {pending
-                    ? "Saving…"
+                    ? t("tx.saving")
                     : isEdit
-                      ? "Save changes"
-                      : "Add transaction"}
+                      ? t("tx.saveChanges")
+                      : t("tx.add")}
                 </button>
               </div>
             </form>

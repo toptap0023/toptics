@@ -19,37 +19,13 @@ import {
   bangkokYearMonth,
   formatMoney,
   HISTORY_START_ABS,
+  MONTHS_SHORT as SHORT,
   todayISO,
 } from "@/lib/format";
 import { computeForecast } from "@/lib/forecast";
 import { CloseIcon } from "@/components/icons";
 import { useI18n } from "@/components/LanguageProvider";
-
-/** Copy text to the clipboard with a textarea fallback for older browsers. */
-async function copyText(text: string): Promise<boolean> {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-  } catch {
-    // fall through to the legacy path
-  }
-  try {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    return ok;
-  } catch {
-    return false;
-  }
-}
+import { copyText } from "@/lib/clipboard";
 
 // Plain-language explainer for the forecast, shown in the "?" sheet.
 const FORECAST_HELP = {
@@ -111,21 +87,6 @@ const FORECAST_HELP = {
   },
 } as const;
 
-const SHORT = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
 /** Days from a..b inclusive (both YYYY-MM-DD). */
 function daysInclusive(a: string, b: string): number {
   const [ay, am, ad] = a.split("-").map(Number);
@@ -165,7 +126,7 @@ export function InsightsClient({
   currency: string;
   initialOffset?: number;
 }) {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
   const { year: baseYear, month: baseMonth } = bangkokYearMonth();
   const [selected, setSelected] = useState<Selection>(initialOffset);
   const [catHorizon, setCatHorizon] = useState<1 | 3>(1); // forecast: 1m or 3m
@@ -376,12 +337,15 @@ export function InsightsClient({
     // 1) Savings rate
     const savingsRate = income > 0 ? (income - expense) / income : null;
     if (savingsRate === null) {
-      signals.push({ label: "Savings rate", value: "No income", tone: "watch" });
+      signals.push({ label: t("ins.sig.savings"), value: t("ins.val.noIncome"), tone: "watch" });
     } else {
       const pct = Math.round(savingsRate * 100);
       signals.push({
-        label: "Savings rate",
-        value: pct >= 0 ? `Saving ${pct}%` : `Overspending ${Math.abs(pct)}%`,
+        label: t("ins.sig.savings"),
+        value:
+          pct >= 0
+            ? t("ins.val.saving", { pct })
+            : t("ins.val.overspending", { pct: Math.abs(pct) }),
         tone: pct >= 20 ? "good" : pct >= 0 ? "watch" : "bad",
       });
     }
@@ -389,17 +353,17 @@ export function InsightsClient({
     // 2) Spending trend (forward-looking, from the forecast)
     if (forecast) {
       signals.push({
-        label: "Spending trend",
+        label: t("ins.sig.trend"),
         value:
           forecast.trend === "rising"
-            ? "Trending up"
+            ? t("ins.val.trendUp")
             : forecast.trend === "falling"
-              ? "Trending down"
-              : "Steady",
+              ? t("ins.val.trendDown")
+              : t("ins.val.steady"),
         tone: forecast.trend === "rising" ? "watch" : "good",
       });
     } else {
-      signals.push({ label: "Spending trend", value: "Not enough data", tone: "watch" });
+      signals.push({ label: t("ins.sig.trend"), value: t("ins.val.notEnough"), tone: "watch" });
     }
 
     // 3) Top-category concentration
@@ -407,7 +371,7 @@ export function InsightsClient({
     const topShare = top && expense > 0 ? top.value / expense : 0;
     if (top && expense > 0) {
       signals.push({
-        label: "Top category",
+        label: t("ins.sig.topCat"),
         value: `${top.label} · ${Math.round(topShare * 100)}%`,
         tone: topShare >= 0.5 ? "watch" : "good",
       });
@@ -416,50 +380,46 @@ export function InsightsClient({
     const bad = signals.filter((s) => s.tone === "bad").length;
     const watch = signals.filter((s) => s.tone === "watch").length;
     const status: "healthy" | "watch" | "attention" =
-      bad > 0 ? "attention" : watch >= 2 ? "watch" : watch === 1 ? "watch" : "healthy";
-    const summary =
-      status === "healthy"
-        ? "Your finances look healthy."
-        : status === "watch"
-          ? "A few things worth keeping an eye on."
-          : "Your spending needs attention.";
+      bad > 0 ? "attention" : watch >= 1 ? "watch" : "healthy";
+    const summary = t(`ins.summary.${status}`);
 
     // Recommended actions — highest-impact first, capped at three.
     const actions: string[] = [];
     if (savingsRate !== null && savingsRate < 0) {
       actions.push(
-        `You spent ${formatMoney(expense - income, currency)} more than you earned — trim non-essentials first.`
+        t("ins.act.overspend", { amt: formatMoney(expense - income, currency) })
       );
     }
     if (forecast && forecast.trend === "rising") {
       actions.push(
-        `Spending is trending up (≈ ${formatMoney(forecast.monthly, currency)} next month). Set a tighter budget.`
+        t("ins.act.rising", { amt: formatMoney(forecast.monthly, currency) })
       );
     }
     if (top && topShare >= 0.4) {
       actions.push(
-        `${top.label} is ${Math.round(topShare * 100)}% of spending — your biggest lever to cut.`
+        t("ins.act.concentration", {
+          label: top.label,
+          pct: Math.round(topShare * 100),
+        })
       );
     }
     if (savingsRate !== null && savingsRate >= 0.2) {
-      actions.push(
-        `Nice — you kept ${Math.round(savingsRate * 100)}% of income. Consider moving it to savings.`
-      );
+      actions.push(t("ins.act.saver", { pct: Math.round(savingsRate * 100) }));
     }
     if (actions.length === 0) {
-      actions.push("On track. Keep logging transactions to sharpen your trends.");
+      actions.push(t("ins.act.onTrack"));
     }
 
     return { status, summary, signals, actions: actions.slice(0, 3) };
-  }, [income, expense, segments, forecast, currency]);
+  }, [income, expense, segments, forecast, currency, t]);
 
   const STATUS_META = {
-    healthy: { label: "Healthy", text: "text-pos", bg: "bg-pos/15" },
-    watch: { label: "Watch", text: "text-warn", bg: "bg-warn/15" },
-    attention: { label: "Needs attention", text: "text-neg", bg: "bg-neg/15" },
+    healthy: { text: "text-pos", bg: "bg-pos/15" },
+    watch: { text: "text-warn", bg: "bg-warn/15" },
+    attention: { text: "text-neg", bg: "bg-neg/15" },
   } as const;
-  const toneClass = (t: "good" | "watch" | "bad") =>
-    t === "good" ? "text-pos" : t === "bad" ? "text-neg" : "text-warn";
+  const toneClass = (tn: "good" | "watch" | "bad") =>
+    tn === "good" ? "text-pos" : tn === "bad" ? "text-neg" : "text-warn";
 
   // Recent monthly trend on the REAL calendar (independent of the selected
   // chip): this month, last month, and the trailing 3-month average.
@@ -606,9 +566,9 @@ export function InsightsClient({
       {/* Header + simple period picker */}
       <header className="sticky top-0 z-30 border-b border-line bg-bg-soft/80 backdrop-blur-lg pt-safe">
         <div className="mx-auto max-w-2xl px-5 pt-3.5 pb-2.5 flex items-baseline justify-between">
-          <h1 className="text-xl font-bold tracking-tight">Insights</h1>
+          <h1 className="text-xl font-bold tracking-tight">{t("ins.title")}</h1>
           <p className="text-sm font-medium tabular-nums text-ink-muted">
-            {periodLabel}
+            {isOverview ? t("ins.allTime") : periodLabel}
           </p>
         </div>
         <div className="mx-auto max-w-2xl pb-3">
@@ -617,7 +577,7 @@ export function InsightsClient({
             className="no-scrollbar flex gap-2 overflow-x-auto px-5"
           >
             <Chip active={isOverview} onClick={() => setSelected("overview")}>
-              Overview
+              {t("ins.overview")}
             </Chip>
             {months.map((m) => (
               <Chip
@@ -635,7 +595,7 @@ export function InsightsClient({
       <div className="mx-auto max-w-2xl px-5 pt-5 pb-8 flex flex-col gap-5">
         {/* Balance + totals for the selected period */}
         <Card className="p-5 bg-gradient-to-br from-bg-panel to-bg-panel2">
-          <p className="text-sm text-ink-muted">Total balance</p>
+          <p className="text-sm text-ink-muted">{t("ins.totalBalance")}</p>
           <p className="mt-1 text-3xl font-bold tabular-nums">
             <Amount value={balance} currency={currency} />
           </p>
@@ -643,7 +603,7 @@ export function InsightsClient({
             <div className="rounded-xl bg-bg-soft/60 px-3 py-2.5">
               <p className="text-[11px] text-ink-muted flex items-center gap-1">
                 <ArrowUpIcon className="w-3.5 h-3.5 text-pos" />
-                Income
+                {t("common.income")}
               </p>
               <p className="mt-0.5 text-sm font-semibold">
                 <Amount value={income} currency={currency} type="income" />
@@ -652,14 +612,14 @@ export function InsightsClient({
             <div className="rounded-xl bg-bg-soft/60 px-3 py-2.5">
               <p className="text-[11px] text-ink-muted flex items-center gap-1">
                 <ArrowDownIcon className="w-3.5 h-3.5 text-neg" />
-                Expense
+                {t("common.expense")}
               </p>
               <p className="mt-0.5 text-sm font-semibold">
                 <Amount value={expense} currency={currency} type="expense" />
               </p>
             </div>
             <div className="rounded-xl bg-bg-soft/60 px-3 py-2.5">
-              <p className="text-[11px] text-ink-muted">Net</p>
+              <p className="text-[11px] text-ink-muted">{t("common.net")}</p>
               <p className="mt-0.5 text-sm font-semibold">
                 <Amount value={income - expense} currency={currency} signed />
               </p>
@@ -671,15 +631,15 @@ export function InsightsClient({
           <Card>
             <EmptyState
               icon={<ChartIcon className="w-6 h-6" />}
-              title={isOverview ? "No transactions yet" : "No data this month"}
-              description="Add transactions and your insights will appear here."
+              title={isOverview ? t("ins.empty.noTx") : t("ins.empty.noMonth")}
+              description={t("ins.empty.desc")}
             />
           </Card>
         ) : (
           <>
             {/* Account status + recommended actions */}
             <section>
-              <SectionTitle>Account status</SectionTitle>
+              <SectionTitle>{t("ins.accountStatus")}</SectionTitle>
               <Card className="p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -695,7 +655,7 @@ export function InsightsClient({
                   <span
                     className={`flex-none rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_META[health.status].bg} ${STATUS_META[health.status].text}`}
                   >
-                    {STATUS_META[health.status].label}
+                    {t(`ins.status.${health.status}`)}
                   </span>
                 </div>
 
@@ -718,7 +678,7 @@ export function InsightsClient({
                 <div className="mt-4 border-t border-line pt-3">
                   <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                     <SparkIcon className="h-3.5 w-3.5 text-teal" />
-                    Recommended
+                    {t("ins.recommended")}
                   </p>
                   <ul className="flex flex-col gap-2">
                     {health.actions.map((a, i) => (
@@ -743,11 +703,9 @@ export function InsightsClient({
                     <SparkIcon className="h-5 w-5 text-teal" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold">AI Coach</p>
+                    <p className="text-sm font-semibold">{t("ins.coach")}</p>
                     <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
-                      A ready-made prompt with your stats built in — paste into
-                      Gemini, ChatGPT, or Claude for an analysis and a
-                      personalized plan.
+                      {t("ins.coachDesc")}
                     </p>
                   </div>
                 </div>
@@ -757,7 +715,7 @@ export function InsightsClient({
                   className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl bg-teal px-4 py-3 text-sm font-semibold text-bg shadow-glow transition-colors duration-200 hover:bg-teal-dark cursor-pointer"
                 >
                   <CopyIcon className="h-4 w-4" />
-                  {coachCopied ? "Copied!" : "Copy AI Coach prompt"}
+                  {coachCopied ? t("ins.copied") : t("ins.coachCopy")}
                 </button>
               </Card>
             </section>
@@ -765,18 +723,19 @@ export function InsightsClient({
             {/* Spending */}
             <section>
               <SectionTitle>
-                {isOverview ? "Total spending" : "Spending this month"}
+                {isOverview ? t("ins.totalSpending") : t("ins.spendingMonth")}
               </SectionTitle>
               <Card className="p-5">
                 <p className="text-3xl font-bold tabular-nums text-neg">
                   {formatMoney(expense, currency)}
                 </p>
                 <p className="mt-1 text-sm text-ink-muted">
-                  Avg{" "}
+                  {t("ins.avg")}{" "}
                   <span className="font-semibold text-ink">
                     {formatMoney(avgPerDay, currency)}
                   </span>{" "}
-                  / day{isCurrentMonth ? " so far" : ""}
+                  / {t("ins.day")}
+                  {isCurrentMonth ? ` ${t("ins.soFar")}` : ""}
                 </p>
               </Card>
             </section>
@@ -785,12 +744,12 @@ export function InsightsClient({
                 drill into the per-category breakdown. */}
             {!isOverview && (
               <section>
-                <SectionTitle>Comparison</SectionTitle>
+                <SectionTitle>{t("ins.comparison")}</SectionTitle>
                 <Card className="divide-y divide-line overflow-hidden">
                   {periods.map((p) => (
                     <CompRow
                       key={p.id}
-                      label={p.label}
+                      label={t(p.id === "last" ? "ins.vsLast" : `ins.vs${p.id}`)}
                       base={p.base}
                       current={expense}
                       currency={currency}
@@ -799,7 +758,7 @@ export function InsightsClient({
                   ))}
                 </Card>
                 <p className="mt-1.5 px-1 text-[11px] text-ink-muted/70">
-                  Tap a row to see the change per category.
+                  {t("ins.tapRow")}
                 </p>
               </section>
             )}
@@ -807,7 +766,7 @@ export function InsightsClient({
             {/* By category */}
             {segments.length > 0 && (
               <section>
-                <SectionTitle>By category</SectionTitle>
+                <SectionTitle>{t("ins.byCategory")}</SectionTitle>
                 <Card className="p-5">
                   <DonutChart segments={segments} currency={currency} />
                 </Card>
@@ -831,13 +790,13 @@ export function InsightsClient({
                 </button>
               }
             >
-              Forecast
+              {t("ins.forecast")}
             </SectionTitle>
             <Card className="p-5">
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-bg-soft/50 px-3 py-2.5">
                   <p className="text-[11px] text-ink-muted">
-                    Next month · {forecast.nextLabel}
+                    {t("ins.nextMonth")} · {forecast.nextLabel}
                   </p>
                   <p className="mt-0.5 whitespace-nowrap text-xl font-bold tabular-nums">
                     <span className="font-normal text-ink-muted">≈</span>{" "}
@@ -851,7 +810,7 @@ export function InsightsClient({
                   ) : null}
                 </div>
                 <div className="rounded-xl bg-bg-soft/50 px-3 py-2.5">
-                  <p className="text-[11px] text-ink-muted">Next 3 months</p>
+                  <p className="text-[11px] text-ink-muted">{t("ins.next3")}</p>
                   <p className="mt-0.5 whitespace-nowrap text-xl font-bold tabular-nums">
                     <span className="font-normal text-ink-muted">≈</span>{" "}
                     {formatMoney(forecast.next3, currency)}
@@ -862,7 +821,7 @@ export function InsightsClient({
               {/* trend · confidence · seasonality */}
               <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
                 {forecast.trend === "steady" ? (
-                  <span className="text-ink-muted">Steady</span>
+                  <span className="text-ink-muted">{t("ins.val.steady")}</span>
                 ) : (
                   <span
                     className={`flex items-center gap-0.5 font-medium ${
@@ -875,20 +834,16 @@ export function InsightsClient({
                       <ArrowDownIcon className="w-3 h-3" />
                     )}
                     {forecast.trend === "rising"
-                      ? "Trending up"
-                      : "Trending down"}
+                      ? t("ins.val.trendUp")
+                      : t("ins.val.trendDown")}
                   </span>
                 )}
                 <span className="text-ink-muted">
-                  {forecast.confidence === "high"
-                    ? "High"
-                    : forecast.confidence === "medium"
-                      ? "Medium"
-                      : "Low"}{" "}
-                  confidence · {forecast.basisMonths} mo
+                  {t(`ins.conf.${forecast.confidence}`)} {t("ins.confidence")} ·{" "}
+                  {forecast.basisMonths} {t("ins.mo")}
                 </span>
                 {forecast.seasonalUsed ? (
-                  <span className="text-teal-light">Seasonally adjusted</span>
+                  <span className="text-teal-light">{t("ins.seasonal")}</span>
                 ) : null}
               </div>
 
@@ -896,7 +851,7 @@ export function InsightsClient({
                 <div className="mt-4 border-t border-line pt-3">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                      Projected by category
+                      {t("ins.projectedByCat")}
                     </p>
                     <div className="flex gap-1 rounded-lg bg-bg-panel2 p-0.5">
                       {([1, 3] as const).map((h) => (
@@ -1040,13 +995,14 @@ function CompRow({
   currency: string;
   detail: CatComparison[];
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
   if (base === 0) {
     return (
       <div className="flex items-center justify-between px-4 py-3">
         <span className="text-sm text-ink-muted">{label}</span>
-        <span className="text-xs text-ink-muted/60">No data</span>
+        <span className="text-xs text-ink-muted/60">{t("ins.noData")}</span>
       </div>
     );
   }
@@ -1073,7 +1029,7 @@ function CompRow({
         </span>
         <span className="flex items-center gap-3">
           <span className="text-xs text-ink-muted">
-            avg {formatMoney(base, currency)}
+            {t("ins.avgWord")} {formatMoney(base, currency)}
           </span>
           <span
             className={`flex items-center gap-0.5 text-sm font-semibold ${
@@ -1093,7 +1049,7 @@ function CompRow({
       {open ? (
         <div className="bg-bg-soft/40 px-4 pb-2.5 pt-0.5">
           {detail.length === 0 ? (
-            <p className="py-2 text-xs text-ink-muted">No category breakdown.</p>
+            <p className="py-2 text-xs text-ink-muted">{t("ins.noCatBreakdown")}</p>
           ) : (
             <ul className="flex flex-col divide-y divide-line/50">
               {detail.map((d) => (
@@ -1114,11 +1070,12 @@ function CompDetailRow({
   d: CatComparison;
   currency: string;
 }) {
+  const { t } = useI18n();
   const { label, color, cur, base } = d;
 
   let badge: React.ReactNode;
   if (base === 0) {
-    badge = <span className="text-xs font-semibold text-teal">New</span>;
+    badge = <span className="text-xs font-semibold text-teal">{t("ins.new")}</span>;
   } else {
     const diff = cur - base;
     const pct = Math.round((Math.abs(diff) / base) * 100);

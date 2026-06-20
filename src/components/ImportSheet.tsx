@@ -6,6 +6,8 @@ import type { Category } from "@/lib/types";
 import { bangkokYearMonth, formatMoney, monthLabel } from "@/lib/format";
 import { importTransactions } from "@/app/(app)/actions";
 import { ArrowUpIcon, CloseIcon, CopyIcon } from "@/components/icons";
+import { useI18n } from "@/components/LanguageProvider";
+import { copyText } from "@/lib/clipboard";
 
 /** Generic prompt for Gemini / any AI to turn ANY budgeting or banking app
  *  screenshot into the CSV that TOPtics imports — works for any pocket names,
@@ -28,31 +30,6 @@ Example output:
 category,budget,remaining
 Food,15000,8656
 Transport,4000,3894`;
-
-async function copyText(text: string): Promise<boolean> {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-  } catch {
-    // fall through
-  }
-  try {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    return ok;
-  } catch {
-    return false;
-  }
-}
 
 const NEW_CAT = "__new__"; // create a new category from the CSV name
 const SKIP_CAT = "__skip__"; // don't import this row
@@ -140,6 +117,7 @@ function parseCsv(
 
 export function ImportSheet({ categories }: { categories: Category[] }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -202,7 +180,7 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
     const parsed = parseCsv(csv, expenseCategories, defMonth);
     if (parsed.length === 0) {
       setRows(null);
-      setError("Couldn't read any rows. Expected: category,budget,remaining");
+      setError(t("imp.errNoRows"));
       return;
     }
     setRows(parsed);
@@ -234,7 +212,7 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
 
   function confirm() {
     if (selected.length === 0) {
-      setError("Nothing selected to import.");
+      setError(t("imp.errNothing"));
       return;
     }
     const items = selected.map((r) => {
@@ -272,7 +250,7 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal px-4 py-3 font-semibold text-bg shadow-glow transition-colors duration-200 hover:bg-teal-dark cursor-pointer"
       >
         <ArrowUpIcon className="w-5 h-5" />
-        Import data
+        {t("imp.title")}
       </button>
 
       {open ? (
@@ -288,7 +266,7 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
           />
           <div className="relative flex w-full flex-col sm:max-w-md bg-bg-soft border-t sm:border border-line sm:rounded-2xl rounded-t-2xl shadow-card max-h-[92dvh] overflow-hidden">
             <div className="flex flex-none items-center justify-between px-5 py-4 border-b border-line">
-              <h2 className="text-lg font-bold">Import data</h2>
+              <h2 className="text-lg font-bold">{t("imp.title")}</h2>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close"
@@ -300,11 +278,10 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
 
             <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-5">
               <p className="text-sm text-ink-muted">
-                Paste a CSV (<code>category,budget,remaining</code>). Spend ={" "}
-                budget − remaining. Add a leading <code>month</code> column
-                (<code>2026-06,Food,…</code>) to import several months at once.
-                Rows are <span className="text-ink">added</span>, never
-                overwritten.
+                {t("imp.sheetDesc", {
+                  fmt: "category,budget,remaining",
+                  month: "month",
+                })}
               </p>
 
               <button
@@ -313,12 +290,10 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
                 className="flex items-center gap-1.5 self-start rounded-lg border border-line bg-bg-panel2 px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors duration-200 hover:border-teal hover:text-teal cursor-pointer"
               >
                 <CopyIcon className="w-3.5 h-3.5" />
-                {promptCopied ? "Copied!" : "Copy AI prompt"}
+                {promptCopied ? t("ins.copied") : t("imp.copyPrompt")}
               </button>
               <p className="-mt-2 text-[11px] text-ink-muted/70">
-                Paste this into Gemini (or any AI) with your budgeting-app
-                screenshot to get the CSV. Categories you don&apos;t have yet are
-                created automatically.
+                {t("imp.promptHint")}
               </p>
               {showPrompt ? (
                 <textarea
@@ -336,9 +311,9 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
                   htmlFor="defMonth"
                   className="text-sm font-medium text-ink-muted"
                 >
-                  Default month{" "}
+                  {t("imp.defaultMonth")}{" "}
                   <span className="text-ink-muted/60">
-                    (for rows without a month)
+                    {t("imp.defaultMonthHint")}
                   </span>
                 </label>
                 <select
@@ -372,7 +347,7 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
                 disabled={!csv.trim()}
                 className="flex items-center justify-center gap-2 rounded-xl border border-line bg-bg-panel2 px-4 py-3 text-sm font-semibold text-ink transition-colors duration-200 hover:border-teal hover:text-teal disabled:opacity-50 disabled:hover:border-line disabled:hover:text-ink cursor-pointer disabled:cursor-not-allowed"
               >
-                Preview
+                {t("imp.preview")}
               </button>
 
               {error ? (
@@ -418,7 +393,7 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
                           </span>
                           {isNew ? (
                             <span className="flex-none rounded-full bg-teal/15 px-1.5 py-0.5 text-[10px] font-semibold text-teal-light">
-                              New
+                              {t("ins.new")}
                             </span>
                           ) : null}
                           <span
@@ -430,12 +405,14 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
                           </span>
                         </div>
                         <p className="mt-1 pl-6 text-[11px] text-ink-muted">
-                          budget {formatMoney(r.budget)} · left{" "}
-                          {formatMoney(r.remaining)}
+                          {t("imp.budgetLeft", {
+                            budget: formatMoney(r.budget),
+                            remaining: formatMoney(r.remaining),
+                          })}
                         </p>
                         <div className="mt-2 flex items-center gap-2 pl-6">
                           <span className="text-[11px] text-ink-muted">
-                            Category
+                            {t("tx.category")}
                           </span>
                           <select
                             value={r.target}
@@ -450,14 +427,14 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
                             }`}
                           >
                             <option value={NEW_CAT}>
-                              ＋ Create “{r.raw}”
+                              {t("imp.create", { raw: r.raw })}
                             </option>
                             {expenseCategories.map((c) => (
                               <option key={c.id} value={c.id}>
                                 {c.name}
                               </option>
                             ))}
-                            <option value={SKIP_CAT}>Skip</option>
+                            <option value={SKIP_CAT}>{t("imp.skip")}</option>
                           </select>
                         </div>
                       </div>
@@ -481,10 +458,8 @@ export function ImportSheet({ categories }: { categories: Category[] }) {
                   className="w-full rounded-xl bg-teal px-4 py-3.5 font-semibold text-bg shadow-glow transition-colors duration-200 hover:bg-teal-dark disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {pending
-                    ? "Adding…"
-                    : `Add ${selected.length} transaction${
-                        selected.length === 1 ? "" : "s"
-                      }`}
+                    ? t("imp.adding")
+                    : t("imp.addN", { n: selected.length })}
                 </button>
               </div>
             ) : null}

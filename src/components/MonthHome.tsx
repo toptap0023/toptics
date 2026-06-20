@@ -11,6 +11,7 @@ import { TransactionSheet } from "@/components/TransactionSheet";
 import { MonthSelectorChart } from "@/components/MonthSelectorChart";
 import { ChartIcon, ChevronRightIcon, ListIcon } from "@/components/icons";
 import { bangkokYearMonth, formatDateGroup, monthLabel } from "@/lib/format";
+import { useI18n } from "@/components/LanguageProvider";
 
 export function MonthHome({
   wallets,
@@ -23,6 +24,7 @@ export function MonthHome({
   transactions: TransactionView[];
   currency: string;
 }) {
+  const { t } = useI18n();
   const { year: baseYear, month: baseMonth } = bangkokYearMonth();
   const [offset, setOffset] = useState(0); // 0 = current month
 
@@ -82,11 +84,11 @@ export function MonthHome({
           <div className="flex items-center justify-center gap-4 pt-1.5 text-[11px] text-ink-muted">
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-pos" aria-hidden="true" />
-              Income
+              {t("common.income")}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-neg" aria-hidden="true" />
-              Expense
+              {t("common.expense")}
             </span>
           </div>
         </div>
@@ -96,21 +98,21 @@ export function MonthHome({
       <div className="mx-auto max-w-2xl px-5 pt-4">
         <Card className="flex items-center justify-around p-3">
           <div className="text-center">
-            <p className="text-xs text-ink-muted">Income</p>
+            <p className="text-xs text-ink-muted">{t("common.income")}</p>
             <p className="mt-0.5 font-semibold">
               <Amount value={income} currency={currency} type="income" />
             </p>
           </div>
           <div className="h-8 w-px bg-line" />
           <div className="text-center">
-            <p className="text-xs text-ink-muted">Expense</p>
+            <p className="text-xs text-ink-muted">{t("common.expense")}</p>
             <p className="mt-0.5 font-semibold">
               <Amount value={expense} currency={currency} type="expense" />
             </p>
           </div>
           <div className="h-8 w-px bg-line" />
           <div className="text-center">
-            <p className="text-xs text-ink-muted">Net</p>
+            <p className="text-xs text-ink-muted">{t("common.net")}</p>
             <p className="mt-0.5 font-semibold">
               <Amount value={income - expense} currency={currency} signed />
             </p>
@@ -123,7 +125,7 @@ export function MonthHome({
           className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-line bg-bg-panel px-4 py-3 text-sm font-semibold text-ink transition-colors duration-200 hover:border-teal hover:text-teal active:bg-bg-panel2 cursor-pointer"
         >
           <ChartIcon className="w-4 h-4" />
-          View {monthLabel(view)} insights
+          {t("home.viewInsights", { month: monthLabel(view) })}
           <ChevronRightIcon className="w-4 h-4" />
         </Link>
       </div>
@@ -134,8 +136,8 @@ export function MonthHome({
           <Card>
             <EmptyState
               icon={<ListIcon className="w-6 h-6" />}
-              title="No transactions this month"
-              description="Tap the + button to add one, or pick another month above."
+              title={t("home.noTx")}
+              description={t("home.noTxDesc")}
             />
           </Card>
         ) : (

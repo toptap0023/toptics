@@ -1,19 +1,5 @@
 import type { TransactionView } from "@/lib/types";
-
-const SHORT = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
+import { MONTHS_SHORT as SHORT } from "@/lib/format";
 
 export interface CatForecast {
   key: string;

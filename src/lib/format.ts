@@ -32,7 +32,8 @@ export function formatMoney(
   return amount < 0 ? `−${formatted}` : formatted;
 }
 
-const MONTHS = [
+/** Short month names, indexed 0–11 (Jan–Dec). Shared across the app. */
+export const MONTHS_SHORT = [
   "Jan",
   "Feb",
   "Mar",
@@ -55,7 +56,7 @@ export function parseDate(d: string): Date {
 
 export function formatDate(d: string): string {
   const date = parseDate(d);
-  return `${MONTHS[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  return `${MONTHS_SHORT[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
 }
 
 export function formatDateGroup(d: string): string {
@@ -73,7 +74,7 @@ export function formatDateGroup(d: string): string {
 }
 
 export function monthLabel(d: Date): string {
-  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  return `${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 /** Today's date in Asia/Bangkok as YYYY-MM-DD (independent of server/device TZ). */

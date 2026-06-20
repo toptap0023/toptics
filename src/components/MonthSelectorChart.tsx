@@ -2,22 +2,11 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import type { TransactionView } from "@/lib/types";
-import { formatMoney, HISTORY_START_ABS } from "@/lib/format";
-
-const SHORT = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
+import {
+  formatMoney,
+  HISTORY_START_ABS,
+  MONTHS_SHORT as SHORT,
+} from "@/lib/format";
 
 /**
  * A horizontally-scrollable income/expense bar chart that doubles as the
