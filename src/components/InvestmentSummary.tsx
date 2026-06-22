@@ -182,9 +182,14 @@ export function InvestmentSummary({
         </p>
       ) : null}
 
-      <p className="mt-5 border-t border-line/60 pt-4 text-center text-xs text-ink-muted">
+      <a
+        href="https://to-passet.vercel.app"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 block text-center text-xs font-medium text-teal transition-colors duration-200 hover:text-teal-light cursor-pointer"
+      >
         {t("ins.viewPortfolio")}
-      </p>
+      </a>
     </div>
   );
 }
