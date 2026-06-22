@@ -174,6 +174,9 @@ const en: Dict = {
   "ins.viewPortfolio": "View full portfolio in TOPasset →",
   "ins.noInvest": "No investments this period.",
   "ins.act.investing": "You invested {amt} this period — keep building wealth.",
+  "ins.taxExport": "Export tax-fund CSV (this year)",
+  "ins.taxExportOk": "Copied {n} rows — paste into TOPasset.",
+  "ins.taxExportNone": "No tax-fund buys yet this year.",
 };
 
 const th: Dict = {
@@ -347,6 +350,9 @@ const th: Dict = {
   "ins.viewPortfolio": "ดูพอร์ตเต็มใน TOPasset →",
   "ins.noInvest": "ช่วงนี้ยังไม่มีการลงทุน",
   "ins.act.investing": "คุณลงทุนไป {amt} ช่วงนี้ — สร้างความมั่งคั่งต่อไป",
+  "ins.taxExport": "Export CSV กองทุนลดหย่อน (ปีนี้)",
+  "ins.taxExportOk": "คัดลอก {n} รายการ — วางใน TOPasset ได้เลย",
+  "ins.taxExportNone": "ปีนี้ยังไม่มีรายการกองทุนลดหย่อน",
 };
 
 export const dictionaries: Record<Lang, Dict> = { en, th };

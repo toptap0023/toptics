@@ -863,6 +863,7 @@ export function InsightsClient({
                     income={income}
                     investBySub={investBySub}
                     investList={investList}
+                    allTransactions={transactions}
                     currency={currency}
                   />
                 </Card>

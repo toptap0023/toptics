@@ -1,15 +1,34 @@
 "use client";
 
+import { useState } from "react";
 import type { TransactionView } from "@/lib/types";
-import { formatDate, formatMoney } from "@/lib/format";
-import { TrendUpIcon } from "@/components/icons";
+import { formatDate, formatMoney, todayISO } from "@/lib/format";
+import { CopyIcon, TrendUpIcon } from "@/components/icons";
 import { useI18n } from "@/components/LanguageProvider";
+import { copyText } from "@/lib/clipboard";
 
 export interface InvestSub {
   label: string;
   color: string;
   value: number;
 }
+
+/** Derive the Thai tax-deduction fund type from the free-text note.
+ *  ponytail: keyword scan (notes are messy, e.g. "SCBTB(ThaiESGA)…"). */
+export function taxType(note: string | null): string {
+  const n = (note || "").toLowerCase().replace(/\s+/g, "");
+  if (n.includes("esg") && n.includes("extra")) return "Thai ESG Extra";
+  if (n.includes("rmf")) return "RMF";
+  if (n.includes("ssf")) return "SSF";
+  if (n.includes("esg")) return "Thai ESG"; // ThaiESG / ThaiESGA → Thai ESG
+  return "";
+}
+
+function csvCell(s: string): string {
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+const TAX_CAT = "กองทุนลดหย่อน";
 
 /**
  * Investment summary — rendered only when investment > 0. Shows the period
@@ -22,6 +41,7 @@ export function InvestmentSummary({
   income,
   investBySub,
   investList,
+  allTransactions,
   currency,
 }: {
   investment: number;
@@ -29,9 +49,39 @@ export function InvestmentSummary({
   income: number;
   investBySub: InvestSub[];
   investList: TransactionView[];
+  allTransactions: TransactionView[];
   currency: string;
 }) {
   const { t } = useI18n();
+  const [taxMsg, setTaxMsg] = useState<string | null>(null);
+
+  // Export this calendar year's tax-deductible fund buys as CSV (for TOPasset's
+  // tax-deduction page). Same shape as the Settings export + a tax_type column.
+  async function exportTaxCsv() {
+    const today = todayISO();
+    const start = `${today.slice(0, 4)}-01-01`;
+    const rows = allTransactions
+      .filter((tx) => tx.category?.name === TAX_CAT && tx.occurred_on >= start)
+      .sort((a, b) => a.occurred_on.localeCompare(b.occurred_on));
+    if (rows.length === 0) {
+      setTaxMsg(t("ins.taxExportNone"));
+      return;
+    }
+    const header = `# TOPtics ลดหย่อน | ${start}..${today} | THB | ${rows.length} rows`;
+    const lines = rows.map((tx) =>
+      [
+        tx.occurred_on,
+        tx.type,
+        csvCell(tx.category?.name ?? ""),
+        String(Math.round(Number(tx.amount))),
+        csvCell(tx.note ?? ""),
+        csvCell(taxType(tx.note)),
+      ].join(",")
+    );
+    const csv = `${header}\ndate,type,category,amount,note,tax_type\n${lines.join("\n")}`;
+    await copyText(csv);
+    setTaxMsg(t("ins.taxExportOk", { n: rows.length }));
+  }
 
   const outflow = expense + investment;
   const pct = outflow > 0 ? Math.round((investment / outflow) * 100) : 0;
@@ -118,7 +168,23 @@ export function InvestmentSummary({
         </div>
       ) : null}
 
-      <p className="mt-4 text-xs text-ink-muted">{t("ins.viewPortfolio")}</p>
+      <button
+        type="button"
+        onClick={exportTaxCsv}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-bg-panel2 px-4 py-3 text-sm font-semibold text-ink transition-colors duration-200 hover:border-teal hover:text-teal cursor-pointer"
+      >
+        <CopyIcon className="h-4 w-4" />
+        {t("ins.taxExport")}
+      </button>
+      {taxMsg ? (
+        <p role="status" className="mt-2 text-xs text-teal-light">
+          {taxMsg}
+        </p>
+      ) : null}
+
+      <p className="mt-5 border-t border-line/60 pt-4 text-center text-xs text-ink-muted">
+        {t("ins.viewPortfolio")}
+      </p>
     </div>
   );
 }
