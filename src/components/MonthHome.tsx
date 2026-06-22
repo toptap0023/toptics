@@ -191,7 +191,15 @@ export function MonthHome({
         )}
       </div>
 
-      <TransactionSheet wallets={wallets} categories={categories} />
+      <TransactionSheet
+        wallets={wallets}
+        categories={categories}
+        defaultDate={
+          offset === 0
+            ? undefined
+            : `${vYear}-${String(vMonth + 1).padStart(2, "0")}-01`
+        }
+      />
     </>
   );
 }

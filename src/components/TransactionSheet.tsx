@@ -71,6 +71,9 @@ interface Props {
   initial?: TransactionView;
   /** Render-prop trigger. If omitted, a floating action button is shown. */
   trigger?: (open: () => void) => React.ReactNode;
+  /** Default date (YYYY-MM-DD) for a NEW entry — e.g. the 1st of the month the
+   *  user is viewing on Home. Ignored in edit mode. */
+  defaultDate?: string;
 }
 
 export function TransactionSheet({
@@ -78,6 +81,7 @@ export function TransactionSheet({
   categories,
   initial,
   trigger,
+  defaultDate,
 }: Props) {
   const router = useRouter();
   const { t } = useI18n();
@@ -93,7 +97,9 @@ export function TransactionSheet({
   const [selectedCat, setSelectedCat] = useState<string>(
     initial?.category_id ?? ""
   );
-  const [date, setDate] = useState<string>(initial?.occurred_on ?? todayISO());
+  const [date, setDate] = useState<string>(
+    initial?.occurred_on ?? defaultDate ?? todayISO()
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const firstFieldRef = useRef<HTMLInputElement>(null);
@@ -117,9 +123,12 @@ export function TransactionSheet({
           : initial?.type ?? "expense"
       );
       setSelectedCat(initial?.category_id ?? "");
-      // Edit keeps its own date; a new entry defaults to the last date used
-      // within 24h (handy for back-entering several items), else today.
-      setDate(initial?.occurred_on ?? readRememberedDate() ?? todayISO());
+      // Edit keeps its own date. A new entry uses the viewed month's 1st
+      // (defaultDate) when given; else the last date used within 24h
+      // (back-entering several items), else today.
+      setDate(
+        initial?.occurred_on ?? defaultDate ?? readRememberedDate() ?? todayISO()
+      );
       const t = setTimeout(() => firstFieldRef.current?.focus(), 60);
       document.body.style.overflow = "hidden";
       return () => {
@@ -127,7 +136,7 @@ export function TransactionSheet({
         document.body.style.overflow = "";
       };
     }
-  }, [open, initial]);
+  }, [open, initial, defaultDate]);
 
   function handleSubmit(formData: FormData) {
     formData.set("type", typeView === "income" ? "income" : "expense");
