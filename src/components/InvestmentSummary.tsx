@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import type { TransactionView } from "@/lib/types";
 import { formatDate, formatMoney, todayISO } from "@/lib/format";
 import { CopyIcon, TrendUpIcon } from "@/components/icons";
 import { useI18n } from "@/components/LanguageProvider";
+import { useToast } from "@/components/Toast";
 import { copyText } from "@/lib/clipboard";
 
 export interface InvestSub {
@@ -53,7 +53,7 @@ export function InvestmentSummary({
   currency: string;
 }) {
   const { t } = useI18n();
-  const [taxMsg, setTaxMsg] = useState<string | null>(null);
+  const toast = useToast();
 
   // Export this calendar year's tax-deductible fund buys as CSV (for TOPasset's
   // tax-deduction page). Same shape as the Settings export + a tax_type column.
@@ -64,7 +64,7 @@ export function InvestmentSummary({
       .filter((tx) => tx.category?.name === TAX_CAT && tx.occurred_on >= start)
       .sort((a, b) => a.occurred_on.localeCompare(b.occurred_on));
     if (rows.length === 0) {
-      setTaxMsg(t("ins.taxExportNone"));
+      toast(t("ins.taxExportNone"), "error");
       return;
     }
     const header = `# TOPtics ลดหย่อน | ${start}..${today} | THB | ${rows.length} rows`;
@@ -80,7 +80,7 @@ export function InvestmentSummary({
     );
     const csv = `${header}\ndate,type,category,amount,note,tax_type\n${lines.join("\n")}`;
     await copyText(csv);
-    setTaxMsg(t("ins.taxExportOk", { n: rows.length }));
+    toast(t("ins.taxExportOk", { n: rows.length }));
   }
 
   const outflow = expense + investment;
@@ -176,11 +176,6 @@ export function InvestmentSummary({
         <CopyIcon className="h-4 w-4" />
         {t("ins.taxExport")}
       </button>
-      {taxMsg ? (
-        <p role="status" className="mt-2 text-xs text-teal-light">
-          {taxMsg}
-        </p>
-      ) : null}
 
       <a
         href="https://to-passet.vercel.app"

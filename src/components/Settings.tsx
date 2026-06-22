@@ -14,6 +14,7 @@ import {
 import { todayISO } from "@/lib/format";
 import { ImportSheet } from "@/components/ImportSheet";
 import { useI18n } from "@/components/LanguageProvider";
+import { useToast } from "@/components/Toast";
 import { copyText } from "@/lib/clipboard";
 
 /* ----------------------------- CSV export ----------------------------- */
@@ -61,6 +62,7 @@ export function Settings({
 }) {
   const router = useRouter();
   const { t } = useI18n();
+  const toast = useToast();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
@@ -85,6 +87,7 @@ export function Settings({
     const ok = await copyText(csv);
     if (ok) {
       setExportCsv(null);
+      toast(t("toast.copied"));
       setExportMsg(
         `Copied ${rows.length} rows (${meta}) to clipboard — paste into your AI chat.`
       );

@@ -32,6 +32,7 @@ import {
 import { computeForecast } from "@/lib/forecast";
 import { CloseIcon } from "@/components/icons";
 import { useI18n } from "@/components/LanguageProvider";
+import { useToast } from "@/components/Toast";
 import { copyText } from "@/lib/clipboard";
 
 // Plain-language explainer for the forecast, shown in the "?" sheet.
@@ -134,6 +135,7 @@ export function InsightsClient({
   initialOffset?: number;
 }) {
   const { lang, t } = useI18n();
+  const toast = useToast();
   const { year: baseYear, month: baseMonth } = bangkokYearMonth();
   const [selected, setSelected] = useState<Selection>(initialOffset);
   const [catHorizon, setCatHorizon] = useState<1 | 3>(1); // forecast: 1m or 3m
@@ -629,6 +631,7 @@ export function InsightsClient({
     const ok = await copyText(coachPrompt);
     if (ok) {
       setCoachCopied(true);
+      toast(t("toast.copied"));
       setTimeout(() => setCoachCopied(false), 2000);
     }
   }

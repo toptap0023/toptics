@@ -10,6 +10,7 @@ import {
 } from "@/app/(app)/actions";
 import { CategoryGlyph, CloseIcon, PlusIcon } from "@/components/icons";
 import { useI18n } from "@/components/LanguageProvider";
+import { useToast } from "@/components/Toast";
 
 /** Shift a YYYY-MM-DD date by a number of days (UTC-safe). */
 function shiftDays(iso: string, days: number): string {
@@ -80,6 +81,7 @@ export function TransactionSheet({
 }: Props) {
   const router = useRouter();
   const { t } = useI18n();
+  const toast = useToast();
   const [open, setOpen] = useState(false);
   const [typeView, setTypeView] = useState<
     "expense" | "income" | "investment"
@@ -139,6 +141,7 @@ export function TransactionSheet({
         return;
       }
       if (!isEdit) rememberDate(date);
+      toast(t(isEdit ? "toast.saved" : "toast.added"));
       setOpen(false);
       router.refresh();
     });

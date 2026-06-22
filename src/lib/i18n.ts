@@ -177,6 +177,10 @@ const en: Dict = {
   "ins.taxExport": "Export tax-fund CSV (this year)",
   "ins.taxExportOk": "Copied {n} rows — paste into TOPasset.",
   "ins.taxExportNone": "No tax-fund buys yet this year.",
+  "toast.added": "Added",
+  "toast.saved": "Saved",
+  "toast.deleted": "Deleted",
+  "toast.copied": "Copied",
 };
 
 const th: Dict = {
@@ -353,6 +357,10 @@ const th: Dict = {
   "ins.taxExport": "Export CSV กองทุนลดหย่อน (ปีนี้)",
   "ins.taxExportOk": "คัดลอก {n} รายการ — วางใน TOPasset ได้เลย",
   "ins.taxExportNone": "ปีนี้ยังไม่มีรายการกองทุนลดหย่อน",
+  "toast.added": "เพิ่มแล้ว",
+  "toast.saved": "บันทึกแล้ว",
+  "toast.deleted": "ลบแล้ว",
+  "toast.copied": "คัดลอกแล้ว",
 };
 
 export const dictionaries: Record<Lang, Dict> = { en, th };

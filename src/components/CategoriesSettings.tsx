@@ -7,10 +7,12 @@ import { Card } from "@/components/Card";
 import { CategoryGlyph, PlusIcon, TrashIcon } from "@/components/icons";
 import { createCategory, deleteCategory } from "@/app/(app)/actions";
 import { useI18n } from "@/components/LanguageProvider";
+import { useToast } from "@/components/Toast";
 
 export function CategoriesSettings({ categories }: { categories: Category[] }) {
   const router = useRouter();
   const { t } = useI18n();
+  const toast = useToast();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [cName, setCName] = useState("");
@@ -33,14 +35,14 @@ export function CategoriesSettings({ categories }: { categories: Category[] }) {
     fd.set("name", cName.trim());
     fd.set("type", cInvest ? "expense" : cType);
     fd.set("is_investment", String(cInvest));
-    run(() => createCategory(fd), () => { setCName(""); setCInvest(false); });
+    run(() => createCategory(fd), () => { setCName(""); setCInvest(false); toast(t("toast.added")); });
   }
 
   function removeCategory(id: string) {
     if (!confirm(t("cat.confirmDelete"))) return;
     const fd = new FormData();
     fd.set("id", id);
-    run(() => deleteCategory(fd));
+    run(() => deleteCategory(fd), () => toast(t("toast.deleted")));
   }
 
   const expense = categories.filter((c) => c.type === "expense" && !c.is_investment);

@@ -7,6 +7,8 @@ import { Amount } from "@/components/Amount";
 import { TransactionSheet } from "@/components/TransactionSheet";
 import { CategoryGlyph, EditIcon, TrashIcon } from "@/components/icons";
 import { deleteTransaction } from "@/app/(app)/actions";
+import { useI18n } from "@/components/LanguageProvider";
+import { useToast } from "@/components/Toast";
 
 export function TransactionRow({
   tx,
@@ -20,6 +22,8 @@ export function TransactionRow({
   currency: string;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
+  const toast = useToast();
   const [expanded, setExpanded] = useState(false);
   const [pending, startTransition] = useTransition();
   const color = tx.category?.color ?? "#8aa0bd";
@@ -30,6 +34,7 @@ export function TransactionRow({
     fd.set("id", tx.id);
     startTransition(async () => {
       await deleteTransaction(fd);
+      toast(t("toast.deleted"));
       router.refresh();
     });
   }
