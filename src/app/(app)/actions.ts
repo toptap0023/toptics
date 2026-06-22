@@ -99,28 +99,6 @@ export async function deleteTransaction(formData: FormData) {
   return { ok: true };
 }
 
-/* -------------------------------- Wallets -------------------------------- */
-
-export async function updateWallet(formData: FormData) {
-  const { supabase, user } = await requireUser();
-  const id = String(formData.get("id"));
-  const name = String(formData.get("name") ?? "").trim();
-  const starting_balance =
-    Math.round(Number(formData.get("starting_balance") ?? 0)) || 0;
-
-  if (!id) return { error: "Missing wallet id." };
-  if (!name) return { error: "Name your wallet." };
-
-  const { error } = await supabase
-    .from("wallets")
-    .update({ name, starting_balance })
-    .eq("id", id)
-    .eq("user_id", user.id);
-  if (error) return { error: error.message };
-  revalidateAll();
-  return { ok: true };
-}
-
 /* ------------------------------- Categories ------------------------------ */
 
 const PALETTE = [
@@ -139,7 +117,12 @@ const PALETTE = [
 export async function createCategory(formData: FormData) {
   const { supabase, user } = await requireUser();
   const name = String(formData.get("name") ?? "").trim();
-  const type = String(formData.get("type")) === "income" ? "income" : "expense";
+  const isInvestment = String(formData.get("is_investment")) === "true";
+  const type = isInvestment
+    ? "expense"
+    : String(formData.get("type")) === "income"
+      ? "income"
+      : "expense";
   const color = String(formData.get("color") ?? "") || PALETTE[name.length % PALETTE.length];
 
   if (!name) return { error: "Name your category." };
@@ -149,7 +132,8 @@ export async function createCategory(formData: FormData) {
     name,
     type,
     color,
-    icon: "tag",
+    icon: isInvestment ? "coins" : "tag",
+    is_investment: isInvestment,
   });
   if (error) return { error: error.message };
   revalidateAll();

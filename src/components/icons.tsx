@@ -226,6 +226,35 @@ export function SparkIcon(props: IconProps) {
   );
 }
 
+export function TrendUpIcon(props: IconProps) {
+  return (
+    <svg {...base(props)} aria-hidden="true">
+      <path d="M3 17l6-6 4 4 8-8" />
+      <path d="M15 7h6v6" />
+    </svg>
+  );
+}
+
+export function CoinsIcon(props: IconProps) {
+  return (
+    <svg {...base(props)} aria-hidden="true">
+      <ellipse cx="9" cy="7" rx="6" ry="3" />
+      <path d="M3 7v5c0 1.7 2.7 3 6 3s6-1.3 6-3V7" />
+      <path d="M15 12.5c2.5-.3 6-1.4 6-3.5 0-1.7-2.7-3-6-3" />
+      <path d="M3 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-2" />
+    </svg>
+  );
+}
+
+export function CryptoIcon(props: IconProps) {
+  return (
+    <svg {...base(props)} aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 8h4a2 2 0 0 1 0 4h-4M9.5 12h4.2a2 2 0 0 1 0 4H9.5M9.5 8v8M11 6.5v1.5M11 16v1.5M13 6.5v1.5M13 16v1.5" />
+    </svg>
+  );
+}
+
 export function WalletIcon(props: IconProps) {
   return (
     <svg {...base(props)} aria-hidden="true">
@@ -405,6 +434,11 @@ export const CATEGORY_ICONS: Record<
   bag: BagIcon,
   play: PlayIcon,
   tag: TagIcon,
+  // investment glyphs
+  chart: ChartIcon,
+  coins: CoinsIcon,
+  shield: ShieldIcon,
+  crypto: CryptoIcon,
 };
 
 export function CategoryGlyph({

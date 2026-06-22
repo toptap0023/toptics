@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { Category, TransactionView, Wallet } from "@/lib/types";
+import type { Category, TransactionView } from "@/lib/types";
 import { Card, SectionTitle } from "@/components/Card";
 import {
   ArrowDownIcon,
@@ -10,10 +10,9 @@ import {
   LogoutIcon,
   PlusIcon,
   TrashIcon,
-  WalletIcon,
 } from "@/components/icons";
-import { formatMoney, todayISO } from "@/lib/format";
-import { createCategory, deleteCategory, updateWallet } from "@/app/(app)/actions";
+import { todayISO } from "@/lib/format";
+import { createCategory, deleteCategory } from "@/app/(app)/actions";
 import { ImportSheet } from "@/components/ImportSheet";
 import { useI18n } from "@/components/LanguageProvider";
 import { copyText } from "@/lib/clipboard";
@@ -55,11 +54,9 @@ function buildCsv(rows: TransactionView[]): string {
 }
 
 export function Settings({
-  wallets,
   categories,
   transactions,
 }: {
-  wallets: Wallet[];
   categories: Category[];
   transactions: TransactionView[];
 }) {
@@ -67,7 +64,6 @@ export function Settings({
   const { t } = useI18n();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [exportCsv, setExportCsv] = useState<string | null>(null);
 
@@ -102,19 +98,13 @@ export function Settings({
     }
   }
 
-  const wallet = wallets[0];
-  const [wName, setWName] = useState(wallet?.name ?? "");
-  const [wStart, setWStart] = useState(
-    wallet ? String(Math.round(wallet.starting_balance)) : ""
-  );
-
   // Category form
   const [cName, setCName] = useState("");
   const [cType, setCType] = useState<"expense" | "income">("expense");
+  const [cInvest, setCInvest] = useState(false);
 
   function run(fn: () => Promise<{ error?: string } | void>, after?: () => void) {
     setError(null);
-    setSaved(false);
     startTransition(async () => {
       const res = await fn();
       if (res && "error" in res && res.error) {
@@ -126,22 +116,19 @@ export function Settings({
     });
   }
 
-  function saveWallet() {
-    if (!wName.trim()) return setError(t("wallet.nameError"));
-    if (!wallet) return;
-    const fd = new FormData();
-    fd.set("id", wallet.id);
-    fd.set("name", wName.trim());
-    fd.set("starting_balance", wStart || "0");
-    run(() => updateWallet(fd), () => setSaved(true));
-  }
-
   function addCategory() {
     if (!cName.trim()) return setError(t("cat.nameError"));
     const fd = new FormData();
     fd.set("name", cName.trim());
-    fd.set("type", cType);
-    run(() => createCategory(fd), () => setCName(""));
+    fd.set("type", cInvest ? "expense" : cType);
+    fd.set("is_investment", String(cInvest));
+    run(
+      () => createCategory(fd),
+      () => {
+        setCName("");
+        setCInvest(false);
+      }
+    );
   }
 
   function removeCategory(id: string) {
@@ -151,8 +138,11 @@ export function Settings({
     run(() => deleteCategory(fd));
   }
 
-  const expense = categories.filter((c) => c.type === "expense");
+  const expense = categories.filter(
+    (c) => c.type === "expense" && !c.is_investment
+  );
   const income = categories.filter((c) => c.type === "income");
+  const investment = categories.filter((c) => c.is_investment);
 
   return (
     <div className="px-5 pt-5 pb-2 flex flex-col gap-6">
@@ -161,72 +151,6 @@ export function Settings({
           {error}
         </p>
       ) : null}
-      {saved ? (
-        <p role="status" className="text-sm text-pos">
-          {t("wallet.saved")}
-        </p>
-      ) : null}
-
-      {/* Wallet */}
-      <section>
-        <SectionTitle>{t("wallet.title")}</SectionTitle>
-        <Card className="p-4 flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <span
-              className="grid h-10 w-10 flex-none place-items-center rounded-xl"
-              style={{ backgroundColor: (wallet?.color ?? "#0a84ff") + "22" }}
-            >
-              <WalletIcon
-                className="w-5 h-5"
-                style={{ color: wallet?.color ?? "#0a84ff" }}
-              />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="font-medium truncate">{wallet?.name ?? "—"}</p>
-              <p className="text-xs text-ink-muted">
-                {t("wallet.startsAt")}{" "}
-                {formatMoney(Number(wallet?.starting_balance ?? 0))}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="wname" className="text-sm font-medium text-ink-muted">
-              {t("wallet.name")}
-            </label>
-            <input
-              id="wname"
-              value={wName}
-              onChange={(e) => setWName(e.target.value)}
-              placeholder="e.g. Cash, Bank"
-              className="rounded-xl bg-bg-panel border border-line px-4 py-3 focus:border-teal"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="wstart" className="text-sm font-medium text-ink-muted">
-              {t("wallet.balance")} <span className="text-ink-muted/60">(฿)</span>
-            </label>
-            <input
-              id="wstart"
-              type="number"
-              inputMode="numeric"
-              step="1"
-              value={wStart}
-              onChange={(e) => setWStart(e.target.value)}
-              placeholder="0"
-              className="rounded-xl bg-bg-panel border border-line px-4 py-3 tabular-nums focus:border-teal"
-            />
-          </div>
-          <button
-            onClick={saveWallet}
-            disabled={pending}
-            className="flex items-center justify-center gap-2 rounded-xl bg-teal px-4 py-3 font-semibold text-bg shadow-glow transition-colors duration-200 hover:bg-teal-dark disabled:opacity-60 cursor-pointer"
-          >
-            {t("wallet.save")}
-          </button>
-        </Card>
-      </section>
-
       {/* Categories */}
       <section>
         <SectionTitle>{t("cat.title")}</SectionTitle>
@@ -244,27 +168,65 @@ export function Settings({
             onRemove={removeCategory}
             pending={pending}
           />
+          <CategoryGroup
+            heading={t("cat.investment")}
+            items={investment}
+            onRemove={removeCategory}
+            pending={pending}
+          />
         </div>
 
         <Card className="mt-3 p-4 flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-bg-panel2 p-1">
-            {(["expense", "income"] as const).map((ty) => (
-              <button
-                key={ty}
-                type="button"
-                onClick={() => setCType(ty)}
-                className={`rounded-lg py-2 text-sm font-semibold transition-colors duration-200 cursor-pointer ${
-                  cType === ty
-                    ? ty === "income"
-                      ? "bg-pos text-bg"
-                      : "bg-neg text-bg"
-                    : "text-ink-muted hover:text-ink"
+          {cInvest ? (
+            <div className="rounded-xl border border-teal/40 bg-teal/10 px-4 py-2.5 text-sm font-semibold text-teal">
+              {t("cat.expense")}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-bg-panel2 p-1">
+              {(["expense", "income"] as const).map((ty) => (
+                <button
+                  key={ty}
+                  type="button"
+                  onClick={() => setCType(ty)}
+                  className={`rounded-lg py-2 text-sm font-semibold transition-colors duration-200 cursor-pointer ${
+                    cType === ty
+                      ? ty === "income"
+                        ? "bg-pos text-bg"
+                        : "bg-neg text-bg"
+                      : "text-ink-muted hover:text-ink"
+                  }`}
+                >
+                  {ty === "income" ? t("cat.income") : t("cat.expense")}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-ink">
+                {t("cat.isInvestment")}
+              </p>
+              <p className="text-xs text-ink-muted">{t("cat.isInvestmentHint")}</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={cInvest}
+              aria-label={t("cat.isInvestment")}
+              onClick={() => setCInvest((v) => !v)}
+              className={`relative flex-none h-7 w-12 rounded-full transition-colors duration-200 cursor-pointer ${
+                cInvest ? "bg-teal" : "bg-bg-panel2 border border-line"
+              }`}
+            >
+              <span
+                className={`absolute top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-bg shadow-sm transition-all duration-200 ${
+                  cInvest ? "left-[26px]" : "left-1"
                 }`}
-              >
-                {ty === "income" ? t("cat.income") : t("cat.expense")}
-              </button>
-            ))}
+              />
+            </button>
           </div>
+
           <input
             value={cName}
             onChange={(e) => setCName(e.target.value)}

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import type { TransactionView } from "@/lib/types";
+import { isInvestmentTx } from "@/lib/types";
 import {
   formatMoney,
   HISTORY_START_ABS,
@@ -40,7 +41,8 @@ export function MonthSelectorChart({
       if (abs < earliest) earliest = abs;
       const cur = sums.get(abs) ?? { income: 0, expense: 0 };
       if (t.type === "income") cur.income += Number(t.amount);
-      else cur.expense += Number(t.amount);
+      else if (!isInvestmentTx(t)) cur.expense += Number(t.amount);
+      // investment expenses are excluded from the trend
       sums.set(abs, cur);
     }
     // include the selected month even if it's in the future relative to data

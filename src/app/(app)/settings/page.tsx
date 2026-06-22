@@ -1,7 +1,7 @@
 import { SettingsHeader } from "@/components/SettingsHeader";
 import { Settings } from "@/components/Settings";
 import { createClient } from "@/lib/supabase/server";
-import { getCategories, getTransactions, getWallets } from "@/lib/queries";
+import { getCategories, getTransactions } from "@/lib/queries";
 import { bangkokYearMonth } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +17,8 @@ export default async function SettingsPage() {
     (((absStart % 12) + 12) % 12) + 1
   ).padStart(2, "0")}-01`;
 
-  const [{ data }, wallets, categories, transactions] = await Promise.all([
+  const [{ data }, categories, transactions] = await Promise.all([
     supabase.auth.getUser(),
-    getWallets(),
     getCategories(),
     getTransactions({ from: exportFrom }),
   ]);
@@ -27,11 +26,7 @@ export default async function SettingsPage() {
   return (
     <>
       <SettingsHeader subtitle={data.user?.email ?? undefined} />
-      <Settings
-        wallets={wallets}
-        categories={categories}
-        transactions={transactions}
-      />
+      <Settings categories={categories} transactions={transactions} />
     </>
   );
 }

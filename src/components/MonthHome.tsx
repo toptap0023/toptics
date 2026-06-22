@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Category, TransactionView, Wallet } from "@/lib/types";
+import { isInvestmentTx } from "@/lib/types";
 import { Card } from "@/components/Card";
 import { Amount } from "@/components/Amount";
 import { EmptyState } from "@/components/EmptyState";
@@ -45,8 +46,12 @@ export function MonthHome({
     .filter((t) => t.type === "income")
     .reduce((s, t) => s + Number(t.amount), 0);
   const expense = monthTx
-    .filter((t) => t.type === "expense")
+    .filter((t) => t.type === "expense" && !isInvestmentTx(t))
     .reduce((s, t) => s + Number(t.amount), 0);
+  const investment = monthTx
+    .filter((t) => isInvestmentTx(t))
+    .reduce((s, t) => s + Number(t.amount), 0);
+  const net = income - expense - investment;
 
   const groups = useMemo(() => {
     const g = new Map<string, TransactionView[]>();
@@ -96,25 +101,34 @@ export function MonthHome({
 
       {/* Month totals */}
       <div className="mx-auto max-w-2xl px-5 pt-4">
-        <Card className="flex items-center justify-around p-3">
-          <div className="text-center">
+        <Card className="flex items-stretch p-3">
+          <div className="flex-1 min-w-0 text-center">
             <p className="text-xs text-ink-muted">{t("common.income")}</p>
-            <p className="mt-0.5 font-semibold">
+            <p className="mt-0.5 text-sm font-semibold">
               <Amount value={income} currency={currency} type="income" />
             </p>
           </div>
-          <div className="h-8 w-px bg-line" />
-          <div className="text-center">
+          <div className="w-px bg-line" />
+          <div className="flex-1 min-w-0 text-center">
             <p className="text-xs text-ink-muted">{t("common.expense")}</p>
-            <p className="mt-0.5 font-semibold">
+            <p className="mt-0.5 text-sm font-semibold">
               <Amount value={expense} currency={currency} type="expense" />
             </p>
           </div>
-          <div className="h-8 w-px bg-line" />
-          <div className="text-center">
-            <p className="text-xs text-ink-muted">{t("common.net")}</p>
-            <p className="mt-0.5 font-semibold">
-              <Amount value={income - expense} currency={currency} signed />
+          <div className="w-px bg-line" />
+          <div className="flex-1 min-w-0 text-center">
+            <p className="text-xs text-ink-muted">{t("common.investment")}</p>
+            <p className="mt-0.5 text-sm font-semibold">
+              <Amount value={investment} currency={currency} />
+            </p>
+          </div>
+          <div className="w-px bg-line" />
+          <div className="flex-1 min-w-0 text-center">
+            <p className="text-xs text-ink-muted">
+              {net >= 0 ? t("net.leftover") : t("net.drawdown")}
+            </p>
+            <p className="mt-0.5 text-sm font-semibold">
+              <Amount value={net} currency={currency} signed />
             </p>
           </div>
         </Card>

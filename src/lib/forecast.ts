@@ -1,4 +1,5 @@
 import type { TransactionView } from "@/lib/types";
+import { isInvestmentTx } from "@/lib/types";
 import { MONTHS_SHORT as SHORT } from "@/lib/format";
 
 export interface CatForecast {
@@ -43,6 +44,7 @@ export function computeForecast(
 
   for (const t of transactions) {
     if (t.type !== "expense") continue;
+    if (isInvestmentTx(t)) continue; // investments are not living expenses
     const [y, m] = t.occurred_on.split("-").map(Number);
     const abs = y * 12 + (m - 1);
     if (abs >= cur) continue; // completed months only

@@ -154,6 +154,26 @@ const en: Dict = {
   "imp.budgetLeft": "budget {budget} · left {remaining}",
   "imp.adding": "Adding…",
   "imp.addN": "Add {n} transactions",
+
+  // investment
+  "common.investment": "Investment",
+  "net.leftover": "Leftover",
+  "net.drawdown": "From savings",
+  "cat.investment": "Investment",
+  "cat.isInvestment": "Investment category",
+  "cat.isInvestmentHint":
+    "Money moved into investments — deducted from your wallet but kept out of spending analysis.",
+  "ins.allocation": "Income · Spending · Investing",
+  "ins.leftoverNote": "income − spending − investing",
+  "ins.investSummary": "Investment summary",
+  "ins.investedTotal": "Invested",
+  "ins.ofOutflow": "{pct}% of money out",
+  "ins.timesIncome": "= {x}× income this period",
+  "ins.investByType": "By type",
+  "ins.recentInvest": "Recent",
+  "ins.viewPortfolio": "View full portfolio in TOPasset →",
+  "ins.noInvest": "No investments this period.",
+  "ins.act.investing": "You invested {amt} this period — keep building wealth.",
 };
 
 const th: Dict = {
@@ -307,6 +327,26 @@ const th: Dict = {
   "imp.budgetLeft": "งบ {budget} · เหลือ {remaining}",
   "imp.adding": "กำลังเพิ่ม…",
   "imp.addN": "เพิ่ม {n} รายการ",
+
+  // investment
+  "common.investment": "ลงทุน",
+  "net.leftover": "เหลือเก็บ",
+  "net.drawdown": "ดึงเงินสะสม",
+  "cat.investment": "ลงทุน",
+  "cat.isInvestment": "เป็นการลงทุน",
+  "cat.isInvestmentHint":
+    "เงินที่ย้ายไปลงทุน — หักจากกระเป๋าเงิน แต่ไม่ถูกนับรวมในบทวิเคราะห์การใช้จ่าย",
+  "ins.allocation": "รายรับ · รายจ่าย · ลงทุน",
+  "ins.leftoverNote": "รายรับ − รายจ่าย − ลงทุน",
+  "ins.investSummary": "สรุปการลงทุน",
+  "ins.investedTotal": "ลงทุนไป",
+  "ins.ofOutflow": "{pct}% ของเงินที่จ่ายออก",
+  "ins.timesIncome": "= {x} เท่าของรายรับช่วงนี้",
+  "ins.investByType": "แยกตามประเภท",
+  "ins.recentInvest": "ล่าสุด",
+  "ins.viewPortfolio": "ดูพอร์ตเต็มใน TOPasset →",
+  "ins.noInvest": "ช่วงนี้ยังไม่มีการลงทุน",
+  "ins.act.investing": "คุณลงทุนไป {amt} ช่วงนี้ — สร้างความมั่งคั่งต่อไป",
 };
 
 export const dictionaries: Record<Lang, Dict> = { en, th };

@@ -36,7 +36,7 @@ export async function getTransactions(
   let query = supabase
     .from("transactions")
     .select(
-      "*, category:categories(id,name,color,icon,type)"
+      "*, category:categories(id,name,color,icon,type,is_investment)"
     )
     .order("occurred_on", { ascending: false })
     .order("created_at", { ascending: false });
@@ -51,21 +51,16 @@ export async function getTransactions(
   return (data as TransactionView[] | null) ?? [];
 }
 
-/** Total current balance = sum of wallet starting balances + all income − all expenses. */
+/** Total current balance = all income − all expenses (no opening balance —
+ *  starting balances are unused; record any pre-existing money as income). */
 export async function getBalance(): Promise<number> {
   const supabase = await createClient();
-  const [{ data: wallets }, { data: txs }] = await Promise.all([
-    supabase.from("wallets").select("starting_balance"),
-    supabase.from("transactions").select("type, amount"),
-  ]);
+  const { data: txs } = await supabase
+    .from("transactions")
+    .select("type, amount");
 
-  const base = (wallets ?? []).reduce(
-    (sum, w) => sum + Number(w.starting_balance),
-    0
-  );
-  const net = (txs ?? []).reduce(
+  return (txs ?? []).reduce(
     (sum, t) => sum + (t.type === "income" ? Number(t.amount) : -Number(t.amount)),
     0
   );
-  return base + net;
 }

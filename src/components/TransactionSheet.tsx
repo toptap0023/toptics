@@ -81,8 +81,12 @@ export function TransactionSheet({
   const router = useRouter();
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<"income" | "expense">(
-    initial?.type ?? "expense"
+  const [typeView, setTypeView] = useState<
+    "expense" | "income" | "investment"
+  >(
+    initial?.type === "expense" && initial?.category?.is_investment
+      ? "investment"
+      : initial?.type ?? "expense"
   );
   const [selectedCat, setSelectedCat] = useState<string>(
     initial?.category_id ?? ""
@@ -93,13 +97,23 @@ export function TransactionSheet({
   const firstFieldRef = useRef<HTMLInputElement>(null);
 
   const isEdit = Boolean(initial);
-  const filteredCategories = categories.filter((c) => c.type === type);
+  const filteredCategories = categories.filter((c) =>
+    typeView === "investment"
+      ? c.type === "expense" && c.is_investment
+      : typeView === "expense"
+        ? c.type === "expense" && !c.is_investment
+        : c.type === "income"
+  );
   const today = todayISO();
 
   useEffect(() => {
     if (open) {
       setError(null);
-      setType(initial?.type ?? "expense");
+      setTypeView(
+        initial?.type === "expense" && initial?.category?.is_investment
+          ? "investment"
+          : initial?.type ?? "expense"
+      );
       setSelectedCat(initial?.category_id ?? "");
       // Edit keeps its own date; a new entry defaults to the last date used
       // within 24h (handy for back-entering several items), else today.
@@ -114,7 +128,7 @@ export function TransactionSheet({
   }, [open, initial]);
 
   function handleSubmit(formData: FormData) {
-    formData.set("type", type);
+    formData.set("type", typeView === "income" ? "income" : "expense");
     formData.set("occurred_on", date);
     startTransition(async () => {
       const res = isEdit
@@ -180,24 +194,30 @@ export function TransactionSheet({
               ) : null}
 
               {/* Type toggle */}
-              <div className="grid grid-cols-2 gap-1 rounded-xl bg-bg-panel p-1">
-                {(["expense", "income"] as const).map((ty) => (
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-bg-panel p-1">
+                {(["expense", "income", "investment"] as const).map((ty) => (
                   <button
                     key={ty}
                     type="button"
                     onClick={() => {
-                      setType(ty);
+                      setTypeView(ty);
                       setSelectedCat("");
                     }}
                     className={`rounded-lg py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer ${
-                      type === ty
+                      typeView === ty
                         ? ty === "income"
                           ? "bg-pos text-bg"
-                          : "bg-neg text-bg"
+                          : ty === "investment"
+                            ? "bg-teal text-bg"
+                            : "bg-neg text-bg"
                         : "text-ink-muted hover:text-ink"
                     }`}
                   >
-                    {ty === "income" ? t("common.income") : t("common.expense")}
+                    {ty === "income"
+                      ? t("common.income")
+                      : ty === "investment"
+                        ? t("common.investment")
+                        : t("common.expense")}
                   </button>
                 ))}
               </div>

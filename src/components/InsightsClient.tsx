@@ -2,10 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Category, TransactionView } from "@/lib/types";
+import { isInvestmentTx } from "@/lib/types";
 import { Card, SectionTitle } from "@/components/Card";
 import { Amount } from "@/components/Amount";
 import { DonutChart, type DonutSegment } from "@/components/DonutChart";
 import { EmptyState } from "@/components/EmptyState";
+import { AllocationBars } from "@/components/AllocationBars";
+import {
+  InvestmentSummary,
+  type InvestSub,
+} from "@/components/InvestmentSummary";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -14,6 +20,7 @@ import {
   CopyIcon,
   ShieldIcon,
   SparkIcon,
+  TrendUpIcon,
 } from "@/components/icons";
 import {
   bangkokYearMonth,
@@ -185,8 +192,11 @@ export function InsightsClient({
 
   const analytics = useMemo(() => {
     let income = 0;
-    let expense = 0;
+    let expense = 0; // LIVING expenses only (investments excluded)
+    let investment = 0; // money moved into investments this period
     const byCat = new Map<string, DonutSegment>();
+    const investBySubMap = new Map<string, InvestSub>();
+    const investList: TransactionView[] = [];
     const pastExp: number[] = new Array(12).fill(0); // 0 = last month … 11 = 12 mo ago
     const pastByCat = new Map<string, number[]>(); // key -> spend per past month
     const catMeta = new Map<string, { label: string; color: string }>();
@@ -210,6 +220,29 @@ export function InsightsClient({
       else byCat.set(key, { label: m.label, color: m.color, value: amt });
     };
 
+    const addInvest = (t: TransactionView, amt: number) => {
+      investment += amt;
+      investList.push(t);
+      const key = t.category?.id ?? "uncat";
+      const sub = investBySubMap.get(key);
+      if (sub) sub.value += amt;
+      else
+        investBySubMap.set(key, {
+          label: t.category?.name ?? "Uncategorized",
+          color: t.category?.color ?? "#98989f",
+          value: amt,
+        });
+    };
+
+    // Route an expense for the SELECTED period into living vs investment.
+    const addExpense = (t: TransactionView, amt: number) => {
+      if (isInvestmentTx(t)) addInvest(t, amt);
+      else {
+        expense += amt;
+        addCurCat(t, amt);
+      }
+    };
+
     for (const t of transactions) {
       const amt = Number(t.amount);
 
@@ -217,10 +250,7 @@ export function InsightsClient({
         if (earliestDate === null || t.occurred_on < earliestDate)
           earliestDate = t.occurred_on;
         if (t.type === "income") income += amt;
-        else {
-          expense += amt;
-          addCurCat(t, amt);
-        }
+        else addExpense(t, amt);
         continue;
       }
 
@@ -228,13 +258,11 @@ export function InsightsClient({
       const monthDiff = (ty - vYear) * 12 + (tm - 1 - vMonth);
       if (monthDiff === 0) {
         if (t.type === "income") income += amt;
-        else {
-          expense += amt;
-          addCurCat(t, amt);
-        }
+        else addExpense(t, amt);
       } else if (monthDiff < 0 && monthDiff >= -12) {
         const idx = -monthDiff - 1;
-        if (t.type === "expense") {
+        // Baselines are LIVING-only — investments never feed the comparison.
+        if (t.type === "expense" && !isInvestmentTx(t)) {
           pastExp[idx] += amt;
           const key = metaOf(t);
           let arr = pastByCat.get(key);
@@ -248,6 +276,9 @@ export function InsightsClient({
     }
 
     const segments = [...byCat.values()].sort((a, b) => b.value - a.value);
+    const investBySub = [...investBySubMap.values()].sort(
+      (a, b) => b.value - a.value
+    );
     const avgN = (n: number) => {
       let sum = 0;
       for (let i = 0; i < n; i++) sum += pastExp[i];
@@ -289,10 +320,28 @@ export function InsightsClient({
       detail: buildDetail(p.n),
     }));
 
-    return { income, expense, segments, earliestDate, periods };
+    return {
+      income,
+      expense,
+      investment,
+      investBySub,
+      investList,
+      segments,
+      earliestDate,
+      periods,
+    };
   }, [transactions, isOverview, vYear, vMonth]);
 
-  const { income, expense, segments, earliestDate, periods } = analytics;
+  const {
+    income,
+    expense,
+    investment,
+    investBySub,
+    investList,
+    segments,
+    earliestDate,
+    periods,
+  } = analytics;
 
   // Average per day
   const today = todayISO();
@@ -315,10 +364,10 @@ export function InsightsClient({
   const forecast = useMemo(
     () =>
       computeForecast(
-        transactions,
+        transactions.filter((t) => !isInvestmentTx(t)),
         curYear,
         curMonth,
-        categories.filter((c) => c.type === "expense")
+        categories.filter((c) => c.type === "expense" && !c.is_investment)
       ),
     [transactions, categories, curYear, curMonth]
   );
@@ -326,7 +375,7 @@ export function InsightsClient({
   const periodLabel = isOverview
     ? "All time"
     : `${SHORT[vMonth]} ${vYear}`;
-  const hasData = expense > 0 || income > 0;
+  const hasData = expense > 0 || income > 0 || investment > 0;
 
   // Account health — an at-a-glance read on the selected period plus a couple
   // of recommended actions, all derived from the user's own numbers.
@@ -406,12 +455,17 @@ export function InsightsClient({
     if (savingsRate !== null && savingsRate >= 0.2) {
       actions.push(t("ins.act.saver", { pct: Math.round(savingsRate * 100) }));
     }
+    if (investment > 0) {
+      actions.push(
+        t("ins.act.investing", { amt: formatMoney(investment, currency) })
+      );
+    }
     if (actions.length === 0) {
       actions.push(t("ins.act.onTrack"));
     }
 
     return { status, summary, signals, actions: actions.slice(0, 3) };
-  }, [income, expense, segments, forecast, currency, t]);
+  }, [income, expense, investment, segments, forecast, currency, t]);
 
   const STATUS_META = {
     healthy: { text: "text-pos", bg: "bg-pos/15" },
@@ -425,14 +479,16 @@ export function InsightsClient({
   // chip): this month, last month, and the trailing 3-month average.
   const coachTimeView = useMemo(() => {
     const curAbs = curYear * 12 + curMonth;
-    const exp = [0, 0, 0, 0]; // 0 = this month … 3 = three months ago
+    const exp = [0, 0, 0, 0]; // 0 = this month … 3 = three months ago (LIVING only)
     const inc = [0, 0, 0, 0];
+    const inv = [0, 0, 0, 0];
     for (const t of transactions) {
       const [ty, tm] = t.occurred_on.split("-").map(Number);
       const off = curAbs - (ty * 12 + (tm - 1));
       if (off < 0 || off > 3) continue;
       const amt = Number(t.amount);
       if (t.type === "income") inc[off] += amt;
+      else if (isInvestmentTx(t)) inv[off] += amt;
       else exp[off] += amt;
     }
     const label = (off: number) => {
@@ -442,6 +498,7 @@ export function InsightsClient({
     return {
       exp,
       inc,
+      inv,
       expAvg3: (exp[1] + exp[2] + exp[3]) / 3,
       incAvg3: (inc[1] + inc[2] + inc[3]) / 3,
       label,
@@ -460,11 +517,14 @@ export function InsightsClient({
     lines.push("MY NUMBERS");
     lines.push(`- Income: ${formatMoney(income, currency)}`);
     lines.push(`- Expenses: ${formatMoney(expense, currency)}`);
-    const net = income - expense;
-    const sr = income > 0 ? Math.round((net / income) * 100) : null;
     lines.push(
-      `- Net this period: ${net >= 0 ? "+" : ""}${formatMoney(net, currency)}${
-        sr !== null ? ` (savings rate ${sr}%)` : ""
+      "  (Expenses above exclude investments — money moved into investments is tracked separately below.)"
+    );
+    const net = income - expense - investment;
+    const sr = income > 0 ? Math.round(((income - expense) / income) * 100) : null;
+    lines.push(
+      `- Net cash this period (income − expenses − investments): ${net >= 0 ? "+" : ""}${formatMoney(net, currency)}${
+        sr !== null ? ` (savings rate ${sr}%, before investing)` : ""
       }`
     );
     lines.push(`- Total balance now: ${formatMoney(balance, currency)}`);
@@ -488,6 +548,16 @@ export function InsightsClient({
       lines.push("TOP SPENDING CATEGORIES");
       for (const s of segments.slice(0, 6)) {
         const share = expense > 0 ? Math.round((s.value / expense) * 100) : 0;
+        lines.push(`- ${s.label}: ${formatMoney(s.value, currency)} (${share}%)`);
+      }
+    }
+
+    if (investment > 0) {
+      lines.push("");
+      lines.push("INVESTMENTS (money moved into investments — excluded from the expenses above)");
+      lines.push(`- Total invested this period: ${formatMoney(investment, currency)}`);
+      for (const s of investBySub) {
+        const share = Math.round((s.value / investment) * 100);
         lines.push(`- ${s.label}: ${formatMoney(s.value, currency)} (${share}%)`);
       }
     }
@@ -544,6 +614,8 @@ export function InsightsClient({
     periodLabel,
     income,
     expense,
+    investment,
+    investBySub,
     balance,
     avgPerDay,
     segments,
@@ -619,12 +691,37 @@ export function InsightsClient({
               </p>
             </div>
             <div className="rounded-xl bg-bg-soft/60 px-3 py-2.5">
-              <p className="text-[11px] text-ink-muted">{t("common.net")}</p>
-              <p className="mt-0.5 text-sm font-semibold">
-                <Amount value={income - expense} currency={currency} signed />
+              <p className="text-[11px] text-ink-muted flex items-center gap-1">
+                <TrendUpIcon className="w-3.5 h-3.5 text-teal" />
+                {t("common.investment")}
+              </p>
+              <p className="mt-0.5 text-sm font-semibold tabular-nums text-teal">
+                {formatMoney(investment, currency)}
               </p>
             </div>
           </div>
+
+          {/* Sign-aware net: leftover (income − spending − investing). */}
+          {(() => {
+            const net = income - expense - investment;
+            return (
+              <div className="mt-4 flex items-baseline justify-between border-t border-line pt-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-ink">
+                    {net >= 0 ? t("net.leftover") : t("net.drawdown")}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-ink-muted">
+                    {t("ins.leftoverNote")}
+                  </p>
+                </div>
+                <p
+                  className={`text-xl font-bold tabular-nums ${net >= 0 ? "text-pos" : "text-neg"}`}
+                >
+                  {formatMoney(net, currency, { sign: true })}
+                </p>
+              </div>
+            );
+          })()}
         </Card>
 
         {!hasData ? (
@@ -739,6 +836,38 @@ export function InsightsClient({
                 </p>
               </Card>
             </section>
+
+            {/* Allocation — income vs spending vs investing on one shared
+                scale. Bars (not a donut) stay truthful even when investment
+                exceeds income. */}
+            <section>
+              <SectionTitle>{t("ins.allocation")}</SectionTitle>
+              <Card className="p-5">
+                <AllocationBars
+                  income={income}
+                  expense={expense}
+                  investment={investment}
+                  currency={currency}
+                />
+              </Card>
+            </section>
+
+            {/* Investment summary — only when there's investing activity. */}
+            {investment > 0 && (
+              <section>
+                <SectionTitle>{t("ins.investSummary")}</SectionTitle>
+                <Card className="p-5">
+                  <InvestmentSummary
+                    investment={investment}
+                    expense={expense}
+                    income={income}
+                    investBySub={investBySub}
+                    investList={investList}
+                    currency={currency}
+                  />
+                </Card>
+              </section>
+            )}
 
             {/* Comparison — only meaningful for a single month. Tap a row to
                 drill into the per-category breakdown. */}
