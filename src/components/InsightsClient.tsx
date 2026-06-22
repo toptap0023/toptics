@@ -869,6 +869,17 @@ export function InsightsClient({
               </section>
             )}
 
+            {/* TOPasset portfolio link */}
+            <a
+              href="https://to-passet.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between rounded-2xl border border-line bg-bg-panel px-4 py-3.5 transition-colors duration-200 hover:border-teal/50 hover:bg-bg-panel2"
+            >
+              <span className="text-sm font-semibold text-ink">View full portfolio in TOPasset</span>
+              <ChevronRightIcon className="w-4 h-4 text-ink-muted" />
+            </a>
+
             {/* Comparison — only meaningful for a single month. Tap a row to
                 drill into the per-category breakdown. */}
             {!isOverview && (
