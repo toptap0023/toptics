@@ -13,21 +13,7 @@ export interface InvestSub {
   value: number;
 }
 
-/** Derive the Thai tax-deduction fund type from the free-text note.
- *  ponytail: keyword scan (notes are messy, e.g. "SCBTB(ThaiESGA)…"). */
-export function taxType(note: string | null): string {
-  const n = (note || "").toLowerCase().replace(/\s+/g, "");
-  if (n.includes("esg") && n.includes("extra")) return "Thai ESG Extra";
-  if (n.includes("rmf")) return "RMF";
-  if (n.includes("ssf")) return "SSF";
-  if (n.includes("esg")) return "Thai ESG"; // ThaiESG / ThaiESGA → Thai ESG
-  return "";
-}
-
-function csvCell(s: string): string {
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
+// TOPasset filters tax-fund rows by this EXACT string — keep it verbatim.
 const TAX_CAT = "กองทุนลดหย่อน";
 
 /**
@@ -55,8 +41,9 @@ export function InvestmentSummary({
   const { t } = useI18n();
   const toast = useToast();
 
-  // Export this calendar year's tax-deductible fund buys as CSV (for TOPasset's
-  // tax-deduction page). Same shape as the Settings export + a tax_type column.
+  // Export this calendar year's tax-fund buys as a minimal CSV for TOPasset,
+  // which sums amount into ONE yearly figure (always whole-year so it overwrites,
+  // never partial). Columns: date,category,amount — no type/note/tax_type.
   async function exportTaxCsv() {
     const today = todayISO();
     const start = `${today.slice(0, 4)}-01-01`;
@@ -68,17 +55,11 @@ export function InvestmentSummary({
       return;
     }
     const header = `# TOPtics ลดหย่อน | ${start}..${today} | THB | ${rows.length} rows`;
-    const lines = rows.map((tx) =>
-      [
-        tx.occurred_on,
-        tx.type,
-        csvCell(tx.category?.name ?? ""),
-        String(Math.round(Number(tx.amount))),
-        csvCell(tx.note ?? ""),
-        csvCell(taxType(tx.note)),
-      ].join(",")
+    // amount is a whole number (no comma) and category is fixed → no escaping.
+    const lines = rows.map(
+      (tx) => `${tx.occurred_on},${TAX_CAT},${Math.round(Number(tx.amount))}`
     );
-    const csv = `${header}\ndate,type,category,amount,note,tax_type\n${lines.join("\n")}`;
+    const csv = `${header}\ndate,category,amount\n${lines.join("\n")}`;
     await copyText(csv);
     toast(t("ins.taxExportOk", { n: rows.length }));
   }
