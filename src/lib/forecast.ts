@@ -84,11 +84,23 @@ export function computeForecast(
     catLevel.set(key, acc / wsum);
   }
 
+  // A recurring expense that has STOPPED (e.g. a paid-off car loan): zero in the
+  // two most-recent data-months. Don't forecast it — otherwise the trailing
+  // weighted average (and last year's seasonal value) keep it alive for months.
+  const ended = new Set<string>();
+  if (recent.length >= 2) {
+    for (const [key, cm] of catMonth) {
+      if ((cm.get(recent[0]) ?? 0) === 0 && (cm.get(recent[1]) ?? 0) === 0)
+        ended.add(key);
+    }
+  }
+
   const seasonalAt = (key: string, targetAbs: number) =>
     catMonth.get(key)?.get(targetAbs - 12); // same calendar month, last year
 
   // Per-category estimate for a target month: blend recency level + seasonal.
   const catForMonth = (key: string, targetAbs: number) => {
+    if (ended.has(key)) return 0;
     const level = catLevel.get(key) ?? 0;
     const s = seasonalAt(key, targetAbs);
     const est = s == null ? level : 0.55 * level + 0.45 * s;
@@ -134,6 +146,7 @@ export function computeForecast(
         [1, 2, 3].reduce((s, dt) => s + catForMonth(key, cur + dt), 0)
       ),
     }))
+    .filter((c) => c.monthly > 0 || c.quarter > 0) // hide ended/never-used cats
     .sort((a, b) => b.monthly - a.monthly || a.label.localeCompare(b.label));
 
   // Range from the spread of recent monthly totals (±1 sd).
