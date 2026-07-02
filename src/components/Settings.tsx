@@ -78,7 +78,7 @@ export function Settings({
 
     if (rows.length === 0) {
       setExportCsv(null);
-      setExportMsg(`No transactions in the last ${meta.toLowerCase()}.`);
+      setExportMsg(t("export.none"));
       return;
     }
 
@@ -88,15 +88,11 @@ export function Settings({
     if (ok) {
       setExportCsv(null);
       toast(t("toast.copied"));
-      setExportMsg(
-        `Copied ${rows.length} rows (${meta}) to clipboard — paste into your AI chat.`
-      );
+      setExportMsg(t("export.copied", { n: rows.length }));
     } else {
       // Clipboard unavailable — show the text so it can be copied manually.
       setExportCsv(csv);
-      setExportMsg(
-        `${rows.length} rows (${meta}) ready — tap the box, select all, and copy.`
-      );
+      setExportMsg(t("export.manual", { n: rows.length }));
     }
   }
 

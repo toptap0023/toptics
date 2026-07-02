@@ -181,6 +181,17 @@ const en: Dict = {
   "toast.saved": "Saved",
   "toast.deleted": "Deleted",
   "toast.copied": "Copied",
+
+  // leftover EN cleanup
+  "common.edit": "Edit",
+  "common.delete": "Delete",
+  "common.uncategorized": "Uncategorized",
+  "tx.confirmDelete": "Delete this transaction?",
+  "date.today": "Today",
+  "date.yesterday": "Yesterday",
+  "export.none": "No transactions in this range.",
+  "export.copied": "Copied {n} rows — paste into your AI chat.",
+  "export.manual": "{n} rows ready — tap the box, select all, and copy.",
 };
 
 const th: Dict = {
@@ -361,6 +372,17 @@ const th: Dict = {
   "toast.saved": "บันทึกแล้ว",
   "toast.deleted": "ลบแล้ว",
   "toast.copied": "คัดลอกแล้ว",
+
+  // leftover EN cleanup
+  "common.edit": "แก้ไข",
+  "common.delete": "ลบ",
+  "common.uncategorized": "ไม่มีหมวดหมู่",
+  "tx.confirmDelete": "ลบรายการนี้?",
+  "date.today": "วันนี้",
+  "date.yesterday": "เมื่อวาน",
+  "export.none": "ช่วงนี้ไม่มีรายการ",
+  "export.copied": "คัดลอก {n} รายการแล้ว — วางในแชต AI ได้เลย",
+  "export.manual": "พร้อม {n} รายการ — แตะกล่องด้านล่าง เลือกทั้งหมด แล้วคัดลอก",
 };
 
 export const dictionaries: Record<Lang, Dict> = { en, th };

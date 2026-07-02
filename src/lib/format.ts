@@ -59,7 +59,9 @@ export function formatDate(d: string): string {
   return `${MONTHS_SHORT[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
 }
 
-export function formatDateGroup(d: string): string {
+/** "today" | "yesterday" for relative day-group headers, else null —
+ *  the caller translates the token (i18n lives in components, not here). */
+export function dateGroupKey(d: string): "today" | "yesterday" | null {
   const date = parseDate(d);
   const today = new Date();
   const isSameDay = (a: Date, b: Date) =>
@@ -68,9 +70,9 @@ export function formatDateGroup(d: string): string {
     a.getDate() === b.getDate();
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
-  if (isSameDay(date, today)) return "Today";
-  if (isSameDay(date, yesterday)) return "Yesterday";
-  return formatDate(d);
+  if (isSameDay(date, today)) return "today";
+  if (isSameDay(date, yesterday)) return "yesterday";
+  return null;
 }
 
 export function monthLabel(d: Date): string {

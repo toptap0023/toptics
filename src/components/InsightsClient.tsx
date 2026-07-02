@@ -192,6 +192,9 @@ export function InsightsClient({
     return arr;
   }, [transactions, baseYear, baseMonth]);
 
+  // Captured outside the memos below — their loop variables shadow i18n's `t`.
+  const uncat = t("common.uncategorized");
+
   const analytics = useMemo(() => {
     let income = 0;
     let expense = 0; // LIVING expenses only (investments excluded)
@@ -208,7 +211,7 @@ export function InsightsClient({
       const key = t.category?.id ?? "uncat";
       if (!catMeta.has(key))
         catMeta.set(key, {
-          label: t.category?.name ?? "Uncategorized",
+          label: t.category?.name ?? uncat,
           color: t.category?.color ?? "#98989f",
         });
       return key;
@@ -230,7 +233,7 @@ export function InsightsClient({
       if (sub) sub.value += amt;
       else
         investBySubMap.set(key, {
-          label: t.category?.name ?? "Uncategorized",
+          label: t.category?.name ?? uncat,
           color: t.category?.color ?? "#98989f",
           value: amt,
         });
@@ -302,7 +305,7 @@ export function InsightsClient({
         }
         if (cur === 0 && base === 0) continue;
         const m = catMeta.get(key) ?? {
-          label: "Uncategorized",
+          label: uncat,
           color: "#98989f",
         };
         rows.push({ key, label: m.label, color: m.color, cur, base });
@@ -332,7 +335,7 @@ export function InsightsClient({
       earliestDate,
       periods,
     };
-  }, [transactions, isOverview, vYear, vMonth]);
+  }, [transactions, isOverview, vYear, vMonth, uncat]);
 
   const {
     income,
@@ -525,13 +528,13 @@ export function InsightsClient({
       .filter((t) => t.note && t.note.trim() && inPeriod(t))
       .map((t) => ({
         date: t.occurred_on,
-        name: t.category?.name ?? "Uncategorized",
+        name: t.category?.name ?? uncat,
         amount: Number(t.amount),
         type: t.type,
         note: t.note!.trim(),
       }))
       .sort((a, b) => b.amount - a.amount);
-  }, [transactions, isOverview, vYear, vMonth]);
+  }, [transactions, isOverview, vYear, vMonth, uncat]);
 
   // A ready-to-paste coaching prompt with the user's own numbers baked in.
   const coachPrompt = useMemo(() => {

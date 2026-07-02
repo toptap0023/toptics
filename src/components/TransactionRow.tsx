@@ -29,7 +29,7 @@ export function TransactionRow({
   const color = tx.category?.color ?? "#8aa0bd";
 
   function handleDelete() {
-    if (!confirm("Delete this transaction?")) return;
+    if (!confirm(t("tx.confirmDelete"))) return;
     const fd = new FormData();
     fd.set("id", tx.id);
     startTransition(async () => {
@@ -58,7 +58,7 @@ export function TransactionRow({
         </span>
         <div className="min-w-0 flex-1">
           <p className="font-medium truncate">
-            {tx.category?.name ?? "Uncategorized"}
+            {tx.category?.name ?? t("common.uncategorized")}
           </p>
           {tx.note ? (
             <p className="text-xs text-ink-muted truncate">{tx.note}</p>
@@ -85,7 +85,7 @@ export function TransactionRow({
                 className="flex items-center gap-1.5 rounded-lg border border-line bg-bg-panel px-3 py-2 text-xs font-medium text-ink-muted transition-colors duration-200 hover:text-ink cursor-pointer"
               >
                 <EditIcon className="w-4 h-4" />
-                Edit
+                {t("common.edit")}
               </button>
             )}
           />
@@ -95,7 +95,7 @@ export function TransactionRow({
             className="flex items-center gap-1.5 rounded-lg border border-neg/30 bg-neg/10 px-3 py-2 text-xs font-medium text-neg transition-colors duration-200 hover:bg-neg/20 disabled:opacity-60 cursor-pointer"
           >
             <TrashIcon className="w-4 h-4" />
-            Delete
+            {t("common.delete")}
           </button>
         </div>
       ) : null}

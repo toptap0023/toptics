@@ -11,7 +11,12 @@ import { TransactionRow } from "@/components/TransactionRow";
 import { TransactionSheet } from "@/components/TransactionSheet";
 import { MonthSelectorChart } from "@/components/MonthSelectorChart";
 import { ChartIcon, ChevronRightIcon, ListIcon } from "@/components/icons";
-import { bangkokYearMonth, formatDateGroup, monthLabel } from "@/lib/format";
+import {
+  bangkokYearMonth,
+  dateGroupKey,
+  formatDate,
+  monthLabel,
+} from "@/lib/format";
 import { useI18n } from "@/components/LanguageProvider";
 
 export function MonthHome({
@@ -165,7 +170,10 @@ export function MonthHome({
               <section key={date}>
                 <div className="mb-2 flex items-center justify-between px-1">
                   <h2 className="text-sm font-semibold text-ink-muted">
-                    {formatDateGroup(date)}
+                    {(() => {
+                      const k = dateGroupKey(date);
+                      return k ? t(`date.${k}`) : formatDate(date);
+                    })()}
                   </h2>
                   <Amount
                     value={dayTotal}
