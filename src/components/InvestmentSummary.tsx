@@ -41,9 +41,9 @@ export function InvestmentSummary({
   const { t } = useI18n();
   const toast = useToast();
 
-  // Export this calendar year's tax-fund buys as a minimal CSV for TOPasset,
-  // which sums amount into ONE yearly figure (always whole-year so it overwrites,
-  // never partial). Columns: date,category,amount — no type/note/tax_type.
+  // Export this calendar year's tax-fund buys as a minimal CSV for TOPasset.
+  // note = fund name (last column, so TOPasset's date,category,amount parser is
+  // unaffected; it can additionally read note to list which funds were bought).
   async function exportTaxCsv() {
     const today = todayISO();
     const start = `${today.slice(0, 4)}-01-01`;
@@ -55,11 +55,14 @@ export function InvestmentSummary({
       return;
     }
     const header = `# TOPtics ลดหย่อน | ${start}..${today} | THB | ${rows.length} rows`;
-    // amount is a whole number (no comma) and category is fixed → no escaping.
+    // note is free text → escape commas/quotes; date/category/amount are safe.
+    const csvCell = (s: string) =>
+      /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     const lines = rows.map(
-      (tx) => `${tx.occurred_on},${TAX_CAT},${Math.round(Number(tx.amount))}`
+      (tx) =>
+        `${tx.occurred_on},${TAX_CAT},${Math.round(Number(tx.amount))},${csvCell(tx.note ?? "")}`
     );
-    const csv = `${header}\ndate,category,amount\n${lines.join("\n")}`;
+    const csv = `${header}\ndate,category,amount,note\n${lines.join("\n")}`;
     await copyText(csv);
     toast(t("ins.taxExportOk", { n: rows.length }));
   }
