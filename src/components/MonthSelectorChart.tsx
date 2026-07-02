@@ -45,8 +45,8 @@ export function MonthSelectorChart({
       // investment expenses are excluded from the trend
       sums.set(abs, cur);
     }
-    // include the selected month even if it's in the future relative to data
-    const last = Math.max(current, current + selectedOffset);
+    // always show next month as a buffer (+1); include a selected future month too
+    const last = Math.max(current + 1, current + selectedOffset);
     const arr: {
       offset: number;
       year: number;

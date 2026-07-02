@@ -480,13 +480,18 @@ export function InsightsClient({
   // Recent monthly trend on the REAL calendar (independent of the selected
   // chip): this month, last month, and the trailing 3-month average.
   const coachTimeView = useMemo(() => {
-    const curAbs = curYear * 12 + curMonth;
-    const exp = [0, 0, 0, 0]; // 0 = this month … 3 = three months ago (LIVING only)
+    // Anchor the trend to the SELECTED month so a month review is self-consistent;
+    // Overview anchors to the real current month.
+    const anchorY = isOverview ? curYear : vYear;
+    const anchorM = isOverview ? curMonth : vMonth;
+    const anchorIsCurrent = anchorY === curYear && anchorM === curMonth;
+    const anchorAbs = anchorY * 12 + anchorM;
+    const exp = [0, 0, 0, 0]; // 0 = anchor month … 3 = three months before (LIVING only)
     const inc = [0, 0, 0, 0];
     const inv = [0, 0, 0, 0];
     for (const t of transactions) {
       const [ty, tm] = t.occurred_on.split("-").map(Number);
-      const off = curAbs - (ty * 12 + (tm - 1));
+      const off = anchorAbs - (ty * 12 + (tm - 1));
       if (off < 0 || off > 3) continue;
       const amt = Number(t.amount);
       if (t.type === "income") inc[off] += amt;
@@ -494,18 +499,39 @@ export function InsightsClient({
       else exp[off] += amt;
     }
     const label = (off: number) => {
-      const d = new Date(curYear, curMonth - off, 1);
+      const d = new Date(anchorY, anchorM - off, 1);
       return `${SHORT[d.getMonth()]} ${d.getFullYear()}`;
     };
     return {
       exp,
       inc,
       inv,
+      anchorIsCurrent,
       expAvg3: (exp[1] + exp[2] + exp[3]) / 3,
       incAvg3: (inc[1] + inc[2] + inc[3]) / 3,
       label,
     };
-  }, [transactions, curYear, curMonth]);
+  }, [transactions, isOverview, vYear, vMonth, curYear, curMonth]);
+
+  // Selected-period transactions I annotated with a note — high-signal context
+  // for the coach (e.g. "เที่ยว ตปท"). Biggest first; capped in the prompt.
+  const notedItems = useMemo(() => {
+    const inPeriod = (t: TransactionView) => {
+      if (isOverview) return true;
+      const [ty, tm] = t.occurred_on.split("-").map(Number);
+      return ty === vYear && tm - 1 === vMonth;
+    };
+    return transactions
+      .filter((t) => t.note && t.note.trim() && inPeriod(t))
+      .map((t) => ({
+        date: t.occurred_on,
+        name: t.category?.name ?? "Uncategorized",
+        amount: Number(t.amount),
+        type: t.type,
+        note: t.note!.trim(),
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [transactions, isOverview, vYear, vMonth]);
 
   // A ready-to-paste coaching prompt with the user's own numbers baked in.
   const coachPrompt = useMemo(() => {
@@ -534,9 +560,9 @@ export function InsightsClient({
 
     const tv = coachTimeView;
     lines.push("");
-    lines.push("RECENT MONTHLY TREND (actual calendar months)");
+    lines.push("RECENT MONTHLY TREND (calendar months, anchored to the period above)");
     lines.push(
-      `- This month (${tv.label(0)}, so far): income ${formatMoney(tv.inc[0], currency)}, expense ${formatMoney(tv.exp[0], currency)}`
+      `- ${tv.label(0)}${tv.anchorIsCurrent ? " (so far)" : ""}: income ${formatMoney(tv.inc[0], currency)}, expense ${formatMoney(tv.exp[0], currency)}`
     );
     lines.push(
       `- Last month (${tv.label(1)}): income ${formatMoney(tv.inc[1], currency)}, expense ${formatMoney(tv.exp[1], currency)}`
@@ -562,6 +588,21 @@ export function InsightsClient({
         const share = Math.round((s.value / investment) * 100);
         lines.push(`- ${s.label}: ${formatMoney(s.value, currency)} (${share}%)`);
       }
+    }
+
+    if (notedItems.length > 0) {
+      lines.push("");
+      lines.push(
+        "ANNOTATED ITEMS (transactions I flagged with a note — may explain unusual amounts)"
+      );
+      for (const it of notedItems.slice(0, 25)) {
+        const sign = it.type === "income" ? "+" : "-";
+        lines.push(
+          `- ${it.date} · ${it.name}: ${sign}${formatMoney(it.amount, currency)} — ${it.note}`
+        );
+      }
+      if (notedItems.length > 25)
+        lines.push(`- (+${notedItems.length - 25} more annotated items)`);
     }
 
     if (forecast) {
@@ -625,6 +666,7 @@ export function InsightsClient({
     isOverview,
     periods,
     coachTimeView,
+    notedItems,
   ]);
 
   async function copyCoachPrompt() {
