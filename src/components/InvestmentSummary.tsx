@@ -132,15 +132,15 @@ export function InvestmentSummary({
             {t("ins.recentInvest")}
           </p>
           <ul className="flex flex-col divide-y divide-line/50">
-            {investList.slice(0, 5).map((tx) => (
-              <li key={tx.id} className="flex items-center gap-2 py-1.5">
+            {investList.map((tx) => (
+              <li key={tx.id} className="flex items-start gap-2 py-1.5">
                 <span className="w-16 flex-none text-xs tabular-nums text-ink-muted">
                   {formatDate(tx.occurred_on)}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-sm text-ink">
+                <span className="min-w-0 flex-1 break-words text-sm leading-snug text-ink">
                   {tx.note || tx.category?.name || ""}
                 </span>
-                <span className="tabular-nums text-sm font-semibold text-ink">
+                <span className="flex-none tabular-nums text-sm font-semibold text-ink">
                   {formatMoney(Number(tx.amount), currency)}
                 </span>
               </li>
