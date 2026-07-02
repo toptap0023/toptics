@@ -559,6 +559,9 @@ export function InsightsClient({
       }`
     );
     lines.push(`- Total balance now: ${formatMoney(balance, currency)}`);
+    lines.push(
+      "  (Important context: my balance and portfolio grow from BOTH new money I keep adding — salary and business income — AND market returns. Do NOT attribute year-over-year portfolio growth to investment performance alone.)"
+    );
     lines.push(`- Average spend per day: ${formatMoney(avgPerDay, currency)}`);
 
     const tv = coachTimeView;
