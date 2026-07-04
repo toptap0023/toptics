@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { formatMoney } from "@/lib/format";
 
 export interface DonutSegment {
@@ -6,7 +7,9 @@ export interface DonutSegment {
   color: string;
 }
 
-export function DonutChart({
+// memo: parent (InsightsClient) re-renders on small UI toggles; segments are
+// referentially stable from its analytics memo, so skip re-drawing the chart.
+export const DonutChart = memo(function DonutChart({
   segments,
   currency = "USD",
   centerLabel = "Spent",
@@ -111,4 +114,4 @@ export function DonutChart({
       </ul>
     </div>
   );
-}
+});

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import type { TransactionView } from "@/lib/types";
 import { formatDate, formatMoney, todayISO } from "@/lib/format";
 import { CopyIcon, TrendUpIcon } from "@/components/icons";
@@ -21,7 +22,8 @@ const TAX_CAT = "กองทุนลดหย่อน";
  * total, its share of total money out, an optional "× income" insight, a
  * by-type breakdown and the most recent investment transactions.
  */
-export function InvestmentSummary({
+// memo: parent re-renders on unrelated UI toggles; all props are memoized.
+export const InvestmentSummary = memo(function InvestmentSummary({
   investment,
   expense,
   income,
@@ -171,4 +173,4 @@ export function InvestmentSummary({
       </a>
     </div>
   );
-}
+});

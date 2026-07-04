@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { formatMoney } from "@/lib/format";
 import { useI18n } from "@/components/LanguageProvider";
 
@@ -8,7 +9,8 @@ import { useI18n } from "@/components/LanguageProvider";
  * and investment for the selected period. Bars (not a donut) because investment
  * can exceed income — bars stay truthful for any relationship between the three.
  */
-export function AllocationBars({
+// memo: skip re-render when the parent toggles unrelated UI state.
+export const AllocationBars = memo(function AllocationBars({
   income,
   expense,
   investment,
@@ -66,4 +68,4 @@ export function AllocationBars({
       </div>
     </div>
   );
-}
+});

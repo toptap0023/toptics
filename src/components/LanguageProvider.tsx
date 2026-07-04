@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { translate, type Lang } from "@/lib/i18n";
@@ -60,9 +61,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     [lang]
   );
 
-  return (
-    <Ctx.Provider value={{ lang, setLang, t }}>{children}</Ctx.Provider>
-  );
+  // Stable identity — a parent-driven re-render must not blast every consumer.
+  const value = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export const useI18n = () => useContext(Ctx);

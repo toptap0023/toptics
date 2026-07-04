@@ -34,10 +34,13 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: do not run code between createServerClient and getUser().
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // IMPORTANT: do not run code between createServerClient and getClaims().
+  // getClaims() verifies the JWT locally against the project's cached JWKS
+  // (no Supabase Auth round-trip per navigation, unlike getUser). Expired
+  // sessions still refresh via getSession() inside it, so @supabase/ssr keeps
+  // writing refreshed cookies; legacy HS256 tokens fall back to a server call.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));

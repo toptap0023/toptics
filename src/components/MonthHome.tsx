@@ -47,15 +47,20 @@ export function MonthHome({
     [transactions, vYear, vMonth]
   );
 
-  const income = monthTx
-    .filter((t) => t.type === "income")
-    .reduce((s, t) => s + Number(t.amount), 0);
-  const expense = monthTx
-    .filter((t) => t.type === "expense" && !isInvestmentTx(t))
-    .reduce((s, t) => s + Number(t.amount), 0);
-  const investment = monthTx
-    .filter((t) => isInvestmentTx(t))
-    .reduce((s, t) => s + Number(t.amount), 0);
+  // One pass, memoized — this ran 3 filter+reduce sweeps on every render
+  // (e.g. while typing in the add-transaction sheet).
+  const { income, expense, investment } = useMemo(() => {
+    let income = 0;
+    let expense = 0;
+    let investment = 0;
+    for (const t of monthTx) {
+      const amt = Number(t.amount);
+      if (t.type === "income") income += amt;
+      else if (isInvestmentTx(t)) investment += amt;
+      else expense += amt;
+    }
+    return { income, expense, investment };
+  }, [monthTx]);
   const net = income - expense - investment;
 
   const groups = useMemo(() => {

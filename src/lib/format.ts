@@ -8,6 +8,24 @@ export const HISTORY_START_MONTH = 0;
 /** Absolute month index (year*12 + monthIndex) of the history start. */
 export const HISTORY_START_ABS = HISTORY_START_YEAR * 12 + HISTORY_START_MONTH;
 
+// Intl formatter construction is expensive and formatMoney runs in hot render
+// loops (chart bars, list rows, prompt building) — cache one per currency.
+const moneyFmtCache = new Map<string, Intl.NumberFormat>();
+function moneyFmt(currency: string): Intl.NumberFormat {
+  let f = moneyFmtCache.get(currency);
+  if (!f) {
+    f = new Intl.NumberFormat("th-TH", {
+      style: "currency",
+      currency,
+      currencyDisplay: "narrowSymbol",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+    moneyFmtCache.set(currency, f);
+  }
+  return f;
+}
+
 export function formatMoney(
   amount: number,
   currency = CURRENCY,
@@ -16,13 +34,7 @@ export function formatMoney(
   const abs = Math.round(Math.abs(amount));
   let formatted: string;
   try {
-    formatted = new Intl.NumberFormat("th-TH", {
-      style: "currency",
-      currency,
-      currencyDisplay: "narrowSymbol",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(abs);
+    formatted = moneyFmt(currency).format(abs);
   } catch {
     formatted = `฿${abs}`;
   }
@@ -80,14 +92,17 @@ export function monthLabel(d: Date): string {
 }
 
 /** Today's date in Asia/Bangkok as YYYY-MM-DD (independent of server/device TZ). */
+// en-CA formats as YYYY-MM-DD; cached — DateTimeFormat construction is costly
+// and todayISO runs on every render of several components.
+const isoDayFmt = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
 export function todayISO(): string {
-  // en-CA formats as YYYY-MM-DD
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+  return isoDayFmt.format(new Date());
 }
 
 /** The current year + 0-based month in Asia/Bangkok. */

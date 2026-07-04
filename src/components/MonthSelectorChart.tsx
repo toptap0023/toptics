@@ -31,7 +31,9 @@ export function MonthSelectorChart({
 }) {
   const current = baseYear * 12 + baseMonth;
 
-  const data = useMemo(() => {
+  // Aggregation depends only on the data — tapping a month must NOT re-scan
+  // all transactions, so selectedOffset stays out of this memo.
+  const { sums, earliest } = useMemo(() => {
     const sums = new Map<number, { income: number; expense: number }>();
     // Always span from Jan 2025; expand further back only if older data exists.
     let earliest = Math.min(HISTORY_START_ABS, current);
@@ -45,6 +47,10 @@ export function MonthSelectorChart({
       // investment expenses are excluded from the trend
       sums.set(abs, cur);
     }
+    return { sums, earliest };
+  }, [transactions, current]);
+
+  const data = useMemo(() => {
     // always show next month as a buffer (+1); include a selected future month too
     const last = Math.max(current + 1, current + selectedOffset);
     const arr: {
@@ -65,7 +71,7 @@ export function MonthSelectorChart({
       });
     }
     return arr;
-  }, [transactions, current, selectedOffset]);
+  }, [sums, earliest, current, selectedOffset]);
 
   const max = Math.max(1, ...data.map((d) => Math.max(d.income, d.expense)));
   const H = 70;
