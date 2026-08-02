@@ -8,7 +8,7 @@ import {
   createTransaction,
   updateTransaction,
 } from "@/app/(app)/actions";
-import { CategoryGlyph, CloseIcon, PlusIcon } from "@/components/icons";
+import { CategoryGlyph, CloseIcon, ExpandIcon, PlusIcon } from "@/components/icons";
 import { useI18n } from "@/components/LanguageProvider";
 import { useToast } from "@/components/Toast";
 
@@ -100,6 +100,8 @@ export function TransactionSheet({
   const [date, setDate] = useState<string>(
     initial?.occurred_on ?? defaultDate ?? todayISO()
   );
+  const [note, setNote] = useState<string>(initial?.note ?? "");
+  const [noteExpanded, setNoteExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const firstFieldRef = useRef<HTMLInputElement>(null);
@@ -123,6 +125,8 @@ export function TransactionSheet({
           : initial?.type ?? "expense"
       );
       setSelectedCat(initial?.category_id ?? "");
+      setNote(initial?.note ?? "");
+      setNoteExpanded(false);
       // Edit keeps its own date. A new entry uses the viewed month's 1st
       // (defaultDate) when given; else the last date used within 24h
       // (back-entering several items), else today.
@@ -343,18 +347,29 @@ export function TransactionSheet({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="note" className="text-sm font-medium text-ink-muted">
-                  {t("tx.note")}{" "}
-                  <span className="text-ink-muted/60">{t("tx.optional")}</span>
-                </label>
-                <input
+                <div className="flex items-center justify-between">
+                  <label htmlFor="note" className="text-sm font-medium text-ink-muted">
+                    {t("tx.note")}{" "}
+                    <span className="text-ink-muted/60">{t("tx.optional")}</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setNoteExpanded(true)}
+                    aria-label={t("tx.expandNote")}
+                    title={t("tx.expandNote")}
+                    className="grid h-8 w-8 place-items-center rounded-lg text-ink-muted hover:text-ink hover:bg-bg-panel transition-colors duration-200 cursor-pointer"
+                  >
+                    <ExpandIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <textarea
                   id="note"
                   name="note"
-                  type="text"
-                  maxLength={120}
-                  defaultValue={initial?.note ?? ""}
+                  rows={4}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
                   placeholder={t("tx.notePlaceholder")}
-                  className="rounded-xl bg-bg-panel border border-line px-4 py-3 focus:border-teal"
+                  className="min-h-[104px] max-h-[240px] resize-y overflow-y-auto rounded-xl bg-bg-panel border border-line px-4 py-3 leading-relaxed focus:border-teal"
                 />
               </div>
               </div>
@@ -379,6 +394,38 @@ export function TransactionSheet({
               </div>
             </form>
           </div>
+        </div>
+      ) : null}
+
+      {open && noteExpanded ? (
+        <div
+          className="fixed inset-0 z-[60] flex flex-col bg-bg-soft"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("tx.note")}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setNoteExpanded(false);
+          }}
+        >
+          <div className="flex flex-none items-center justify-between border-b border-line px-5 py-4">
+            <h2 className="text-lg font-bold">{t("tx.note")}</h2>
+            <button
+              type="button"
+              onClick={() => setNoteExpanded(false)}
+              aria-label={t("tx.collapseNote")}
+              className="grid h-9 w-9 place-items-center rounded-lg text-ink-muted hover:text-ink hover:bg-bg-panel transition-colors duration-200 cursor-pointer"
+            >
+              <CloseIcon className="w-5 h-5" />
+            </button>
+          </div>
+          <textarea
+            autoFocus
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={t("tx.notePlaceholder")}
+            className="w-full flex-1 resize-none bg-transparent px-5 py-4 text-base leading-relaxed focus:outline-none"
+            style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+          />
         </div>
       ) : null}
     </>
