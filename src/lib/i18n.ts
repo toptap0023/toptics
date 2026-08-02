@@ -66,6 +66,8 @@ const en: Dict = {
   "tx.note": "Note",
   "tx.optional": "(optional)",
   "tx.notePlaceholder": "e.g. Lunch with team",
+  "tx.expandNote": "Expand note",
+  "tx.collapseNote": "Close",
   "tx.saving": "Saving…",
   "tx.saveChanges": "Save changes",
 
@@ -258,6 +260,8 @@ const th: Dict = {
   "tx.note": "โน้ต",
   "tx.optional": "(ไม่บังคับ)",
   "tx.notePlaceholder": "เช่น ข้าวเที่ยงกับทีม",
+  "tx.expandNote": "ขยายโน้ต",
+  "tx.collapseNote": "ปิด",
   "tx.saving": "กำลังบันทึก…",
   "tx.saveChanges": "บันทึกการแก้ไข",
 
