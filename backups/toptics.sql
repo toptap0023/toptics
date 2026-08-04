@@ -3798,8 +3798,9 @@ COPY auth.refresh_tokens (instance_id, id, token, user_id, revoked, created_at, 
 00000000-0000-0000-0000-000000000000	105	ulrb4uukowb2	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-08-01 16:32:12.990631+00	2026-08-01 16:32:12.990631+00	ha4i4fmrszl3	244e8039-cd4d-49d4-a090-6a756f668db7
 00000000-0000-0000-0000-000000000000	103	42ekml4wfsl5	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-07-31 11:36:15.565452+00	2026-08-01 16:32:13.540302+00	oe4m35earo2d	f1187015-e8db-44dd-8929-4a47e190f014
 00000000-0000-0000-0000-000000000000	106	53y6fhys6jh5	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-01 16:32:13.540789+00	2026-08-02 03:01:39.525173+00	42ekml4wfsl5	f1187015-e8db-44dd-8929-4a47e190f014
-00000000-0000-0000-0000-000000000000	107	qmad7oxn6gae	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-08-02 03:01:39.537161+00	2026-08-02 03:01:39.537161+00	53y6fhys6jh5	f1187015-e8db-44dd-8929-4a47e190f014
 00000000-0000-0000-0000-000000000000	108	3m3dbwlxnjth	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-08-02 14:37:02.958212+00	2026-08-02 14:37:02.958212+00	\N	7e816d19-5366-46b1-8705-50decf0dc5a5
+00000000-0000-0000-0000-000000000000	107	qmad7oxn6gae	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-02 03:01:39.537161+00	2026-08-02 16:31:36.494979+00	53y6fhys6jh5	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	109	fipalvqy4sc4	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-08-02 16:31:36.503094+00	2026-08-02 16:31:36.503094+00	qmad7oxn6gae	f1187015-e8db-44dd-8929-4a47e190f014
 \.
 
 
@@ -3912,8 +3913,8 @@ COPY auth.sessions (id, user_id, created_at, updated_at, factor_id, aal, not_aft
 33e549db-7fdf-4165-bf16-48b5f8999d4a	89edc986-7e11-4a99-8556-5185a536ae90	2026-07-31 04:35:32.897666+00	2026-07-31 04:35:32.897666+00	\N	aal1	\N	\N	Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.24012.9 Chrome/148.0.7778.280 Electron/42.7.0 Safari/537.36	183.88.230.141	\N	\N	\N	\N	\N
 916c4622-5d1b-4427-acce-9bb4c983de63	89edc986-7e11-4a99-8556-5185a536ae90	2026-07-31 04:35:34.840956+00	2026-07-31 04:35:34.840956+00	\N	aal1	\N	\N	Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.24012.9 Chrome/148.0.7778.280 Electron/42.7.0 Safari/537.36	183.88.230.141	\N	\N	\N	\N	\N
 244e8039-cd4d-49d4-a090-6a756f668db7	89edc986-7e11-4a99-8556-5185a536ae90	2026-07-07 18:57:04.703142+00	2026-08-01 16:32:13.01387+00	\N	aal1	\N	2026-08-01 16:32:13.01375	Vercel Edge Functions	47.129.225.217	\N	\N	\N	\N	\N
-f1187015-e8db-44dd-8929-4a47e190f014	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-23 03:50:47.319628+00	2026-08-02 03:01:39.564932+00	\N	aal1	\N	2026-08-02 03:01:39.564813	Vercel Edge Functions	18.142.144.231	\N	\N	\N	\N	\N
 7e816d19-5366-46b1-8705-50decf0dc5a5	89edc986-7e11-4a99-8556-5185a536ae90	2026-08-02 14:37:02.922106+00	2026-08-02 14:37:02.922106+00	\N	aal1	\N	\N	node	27.145.137.211	\N	\N	\N	\N	\N
+f1187015-e8db-44dd-8929-4a47e190f014	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-23 03:50:47.319628+00	2026-08-02 16:31:36.528192+00	\N	aal1	\N	2026-08-02 16:31:36.528077	Vercel Edge Functions	18.138.51.84	\N	\N	\N	\N	\N
 c3273193-6d11-4ce9-b6bc-267bd207fc74	7caa1992-85c0-4586-ab7a-89754bc37f70	2026-06-19 09:24:06.183789+00	2026-06-19 09:24:06.183789+00	\N	aal1	\N	\N	node	13.207.56.89	\N	\N	\N	\N	\N
 bcef162c-5374-4683-b45f-4b69b36e3897	89edc986-7e11-4a99-8556-5185a536ae90	2026-07-07 18:19:15.259841+00	2026-07-07 18:19:15.259841+00	\N	aal1	\N	\N	Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36	184.22.254.80	\N	\N	\N	\N	\N
 7d3c05c8-595e-4948-8e12-2893585c7d32	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-19 12:00:18.773296+00	2026-06-19 17:26:04.088219+00	\N	aal1	\N	2026-06-19 17:26:04.088112	Next.js Middleware	49.230.59.39	\N	\N	\N	\N	\N
@@ -3947,7 +3948,7 @@ COPY auth.sso_providers (id, resource_id, created_at, updated_at, disabled) FROM
 
 COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, invited_at, confirmation_token, confirmation_sent_at, recovery_token, recovery_sent_at, email_change_token_new, email_change, email_change_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, phone_change, phone_change_token, phone_change_sent_at, email_change_token_current, email_change_confirm_status, banned_until, reauthentication_token, reauthentication_sent_at, is_sso_user, deleted_at, is_anonymous) FROM stdin;
 00000000-0000-0000-0000-000000000000	7caa1992-85c0-4586-ab7a-89754bc37f70	authenticated	authenticated	nannatthamat@gmail.com	$2a$10$wQ0cvs/xc9drGlxpjGpfvur6waC/SZ.JOkhtGb5r/B5fvV2055Yxa	2026-06-19 09:23:48.880079+00	\N		2026-06-19 09:23:32.455766+00		\N			\N	2026-06-20 10:57:46.183579+00	{"provider": "email", "providers": ["email"]}	{"sub": "7caa1992-85c0-4586-ab7a-89754bc37f70", "email": "nannatthamat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-19 09:23:32.402465+00	2026-07-20 05:46:38.768952+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	89edc986-7e11-4a99-8556-5185a536ae90	authenticated	authenticated	tre.thitipat@gmail.com	$2a$10$QgbAASk6F4Oc.bhIrfPdD.qe4P5vnQtY5eb8WRLzOA83D/3NHBNk2	2026-06-18 16:31:25.147218+00	\N		2026-06-18 16:30:58.687866+00	pkce_a6520a32c7e467ca1f59dbabe1ee0805aa906573b7890ebf93cb2e44	2026-06-19 06:41:33.947066+00			\N	2026-08-02 14:37:02.921996+00	{"provider": "email", "providers": ["email"]}	{"sub": "89edc986-7e11-4a99-8556-5185a536ae90", "email": "tre.thitipat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-18 16:30:58.656575+00	2026-08-02 14:37:02.974477+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	89edc986-7e11-4a99-8556-5185a536ae90	authenticated	authenticated	tre.thitipat@gmail.com	$2a$10$QgbAASk6F4Oc.bhIrfPdD.qe4P5vnQtY5eb8WRLzOA83D/3NHBNk2	2026-06-18 16:31:25.147218+00	\N		2026-06-18 16:30:58.687866+00	pkce_a6520a32c7e467ca1f59dbabe1ee0805aa906573b7890ebf93cb2e44	2026-06-19 06:41:33.947066+00			\N	2026-08-02 14:37:02.921996+00	{"provider": "email", "providers": ["email"]}	{"sub": "89edc986-7e11-4a99-8556-5185a536ae90", "email": "tre.thitipat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-18 16:30:58.656575+00	2026-08-02 16:31:36.505765+00	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
 
@@ -5064,7 +5065,7 @@ COPY vault.secrets (id, name, description, secret, key_id, nonce, created_at, up
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: -
 --
 
-SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 108, true);
+SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 109, true);
 
 
 --
