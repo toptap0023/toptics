@@ -3800,7 +3800,9 @@ COPY auth.refresh_tokens (instance_id, id, token, user_id, revoked, created_at, 
 00000000-0000-0000-0000-000000000000	106	53y6fhys6jh5	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-01 16:32:13.540789+00	2026-08-02 03:01:39.525173+00	42ekml4wfsl5	f1187015-e8db-44dd-8929-4a47e190f014
 00000000-0000-0000-0000-000000000000	108	3m3dbwlxnjth	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-08-02 14:37:02.958212+00	2026-08-02 14:37:02.958212+00	\N	7e816d19-5366-46b1-8705-50decf0dc5a5
 00000000-0000-0000-0000-000000000000	107	qmad7oxn6gae	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-02 03:01:39.537161+00	2026-08-02 16:31:36.494979+00	53y6fhys6jh5	f1187015-e8db-44dd-8929-4a47e190f014
-00000000-0000-0000-0000-000000000000	109	fipalvqy4sc4	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-08-02 16:31:36.503094+00	2026-08-02 16:31:36.503094+00	qmad7oxn6gae	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	109	fipalvqy4sc4	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-02 16:31:36.503094+00	2026-08-05 06:10:46.029829+00	qmad7oxn6gae	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	110	nkkry6zfb4mz	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-05 06:10:46.048949+00	2026-08-05 17:09:19.895885+00	fipalvqy4sc4	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	111	zokcf7m3uiba	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-08-05 17:09:19.913944+00	2026-08-05 17:09:19.913944+00	nkkry6zfb4mz	f1187015-e8db-44dd-8929-4a47e190f014
 \.
 
 
@@ -3914,7 +3916,7 @@ COPY auth.sessions (id, user_id, created_at, updated_at, factor_id, aal, not_aft
 916c4622-5d1b-4427-acce-9bb4c983de63	89edc986-7e11-4a99-8556-5185a536ae90	2026-07-31 04:35:34.840956+00	2026-07-31 04:35:34.840956+00	\N	aal1	\N	\N	Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.24012.9 Chrome/148.0.7778.280 Electron/42.7.0 Safari/537.36	183.88.230.141	\N	\N	\N	\N	\N
 244e8039-cd4d-49d4-a090-6a756f668db7	89edc986-7e11-4a99-8556-5185a536ae90	2026-07-07 18:57:04.703142+00	2026-08-01 16:32:13.01387+00	\N	aal1	\N	2026-08-01 16:32:13.01375	Vercel Edge Functions	47.129.225.217	\N	\N	\N	\N	\N
 7e816d19-5366-46b1-8705-50decf0dc5a5	89edc986-7e11-4a99-8556-5185a536ae90	2026-08-02 14:37:02.922106+00	2026-08-02 14:37:02.922106+00	\N	aal1	\N	\N	node	27.145.137.211	\N	\N	\N	\N	\N
-f1187015-e8db-44dd-8929-4a47e190f014	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-23 03:50:47.319628+00	2026-08-02 16:31:36.528192+00	\N	aal1	\N	2026-08-02 16:31:36.528077	Vercel Edge Functions	18.138.51.84	\N	\N	\N	\N	\N
+f1187015-e8db-44dd-8929-4a47e190f014	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-23 03:50:47.319628+00	2026-08-05 17:09:19.935613+00	\N	aal1	\N	2026-08-05 17:09:19.9355	Vercel Edge Functions	13.229.144.10	\N	\N	\N	\N	\N
 c3273193-6d11-4ce9-b6bc-267bd207fc74	7caa1992-85c0-4586-ab7a-89754bc37f70	2026-06-19 09:24:06.183789+00	2026-06-19 09:24:06.183789+00	\N	aal1	\N	\N	node	13.207.56.89	\N	\N	\N	\N	\N
 bcef162c-5374-4683-b45f-4b69b36e3897	89edc986-7e11-4a99-8556-5185a536ae90	2026-07-07 18:19:15.259841+00	2026-07-07 18:19:15.259841+00	\N	aal1	\N	\N	Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36	184.22.254.80	\N	\N	\N	\N	\N
 7d3c05c8-595e-4948-8e12-2893585c7d32	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-19 12:00:18.773296+00	2026-06-19 17:26:04.088219+00	\N	aal1	\N	2026-06-19 17:26:04.088112	Next.js Middleware	49.230.59.39	\N	\N	\N	\N	\N
@@ -3947,8 +3949,8 @@ COPY auth.sso_providers (id, resource_id, created_at, updated_at, disabled) FROM
 --
 
 COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, invited_at, confirmation_token, confirmation_sent_at, recovery_token, recovery_sent_at, email_change_token_new, email_change, email_change_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, phone_change, phone_change_token, phone_change_sent_at, email_change_token_current, email_change_confirm_status, banned_until, reauthentication_token, reauthentication_sent_at, is_sso_user, deleted_at, is_anonymous) FROM stdin;
+00000000-0000-0000-0000-000000000000	89edc986-7e11-4a99-8556-5185a536ae90	authenticated	authenticated	tre.thitipat@gmail.com	$2a$10$QgbAASk6F4Oc.bhIrfPdD.qe4P5vnQtY5eb8WRLzOA83D/3NHBNk2	2026-06-18 16:31:25.147218+00	\N		2026-06-18 16:30:58.687866+00	pkce_a6520a32c7e467ca1f59dbabe1ee0805aa906573b7890ebf93cb2e44	2026-06-19 06:41:33.947066+00			\N	2026-08-02 14:37:02.921996+00	{"provider": "email", "providers": ["email"]}	{"sub": "89edc986-7e11-4a99-8556-5185a536ae90", "email": "tre.thitipat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-18 16:30:58.656575+00	2026-08-05 17:09:19.92235+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	7caa1992-85c0-4586-ab7a-89754bc37f70	authenticated	authenticated	nannatthamat@gmail.com	$2a$10$wQ0cvs/xc9drGlxpjGpfvur6waC/SZ.JOkhtGb5r/B5fvV2055Yxa	2026-06-19 09:23:48.880079+00	\N		2026-06-19 09:23:32.455766+00		\N			\N	2026-06-20 10:57:46.183579+00	{"provider": "email", "providers": ["email"]}	{"sub": "7caa1992-85c0-4586-ab7a-89754bc37f70", "email": "nannatthamat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-19 09:23:32.402465+00	2026-07-20 05:46:38.768952+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	89edc986-7e11-4a99-8556-5185a536ae90	authenticated	authenticated	tre.thitipat@gmail.com	$2a$10$QgbAASk6F4Oc.bhIrfPdD.qe4P5vnQtY5eb8WRLzOA83D/3NHBNk2	2026-06-18 16:31:25.147218+00	\N		2026-06-18 16:30:58.687866+00	pkce_a6520a32c7e467ca1f59dbabe1ee0805aa906573b7890ebf93cb2e44	2026-06-19 06:41:33.947066+00			\N	2026-08-02 14:37:02.921996+00	{"provider": "email", "providers": ["email"]}	{"sub": "89edc986-7e11-4a99-8556-5185a536ae90", "email": "tre.thitipat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-18 16:30:58.656575+00	2026-08-02 16:31:36.505765+00	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
 
@@ -4803,6 +4805,8 @@ d2c02b15-b08b-4ae5-939d-d4c981dc3f9f	89edc986-7e11-4a99-8556-5185a536ae90	101033
 46dd829d-54c9-4864-b42b-337a19a2e1d1	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	170ce800-a9d8-40f2-87c9-bb651159b9a0	income	890.00	U2 ขายไม้กอล์ฟเตี่ย	2026-07-15	2026-07-07 11:25:00.57106+00
 65ba2d97-4b7e-41bd-9d23-7677c35672fc	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	170ce800-a9d8-40f2-87c9-bb651159b9a0	income	5900.00	ขายping425 ต้นทุน 4.7k กำไร 1,200บาท	2026-07-15	2026-07-07 11:23:28.857931+00
 c3d40554-ca4b-4546-855d-473137d14bcd	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	3c6a1afb-8ac9-4ff4-ae5c-984d1da64099	expense	19420.00	=== รายการซื้ออุปกรณ์กอล์ฟ (Sport Items Breakdown) ===  • Driver: PING G430 Max (Shaft S-Flex)   - ราคา: ฿6,800  • Hybri	2026-07-15	2026-08-01 16:33:57.269431+00
+c890e617-e1aa-4905-b06b-0044788dbbf7	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	3c6a1afb-8ac9-4ff4-ae5c-984d1da64099	expense	6000.00	Srixon Z585 (5-PW) 2018: -6,000 บาท	2026-08-06	2026-08-05 17:12:01.87214+00
+d3ef7745-5ed3-46de-9672-d98c9b169b36	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	52c33614-9c9a-4025-b5e0-f946961dbf7a	income	6900.00	ขาย xxio esk x black forged 2020 5-9 iron set\r\nซื้อมาปีที่แล้ว 5000 บาทขายได้ 6900 บาทกำไร 1900	2026-08-06	2026-08-05 17:13:31.100972+00
 \.
 
 
@@ -5065,7 +5069,7 @@ COPY vault.secrets (id, name, description, secret, key_id, nonce, created_at, up
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: -
 --
 
-SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 109, true);
+SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 111, true);
 
 
 --
