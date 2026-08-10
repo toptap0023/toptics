@@ -421,8 +421,7 @@ export function TransactionSheet({
 
       {open && noteExpanded ? (
         <div
-          ref={noteOverlayRef}
-          className="fixed inset-x-0 top-0 z-[60] flex h-dvh flex-col bg-bg-soft"
+          className="fixed inset-0 z-[60] bg-bg-soft"
           role="dialog"
           aria-modal="true"
           aria-label={t("tx.note")}
@@ -430,6 +429,10 @@ export function TransactionSheet({
             if (e.key === "Escape") setNoteExpanded(false);
           }}
         >
+          {/* Outer stays full-screen so the sheet behind can never show through
+              in the gap the keyboard leaves; only this inner band tracks the
+              visual viewport, keeping the header reachable. */}
+          <div ref={noteOverlayRef} className="flex h-dvh flex-col">
           <div className="flex flex-none items-center justify-between border-b border-line px-5 py-4 pt-safe">
             <h2 className="text-lg font-bold">{t("tx.note")}</h2>
             <button
@@ -449,6 +452,7 @@ export function TransactionSheet({
             className="w-full flex-1 resize-none bg-transparent px-5 py-4 text-base leading-relaxed focus:outline-none"
             style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
           />
+          </div>
         </div>
       ) : null}
     </>
