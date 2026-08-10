@@ -107,17 +107,15 @@ export function TransactionSheet({
   const firstFieldRef = useRef<HTMLInputElement>(null);
   const noteOverlayRef = useRef<HTMLDivElement>(null);
 
-  // iOS: the on-screen keyboard shrinks the visual viewport and scrolls the
-  // page, dragging a `fixed` overlay (and its close button) off the top of the
-  // screen. Pin the overlay to the visual viewport so it stays reachable.
+  // The header stays pinned to the top; only cap the editor band to the visual
+  // viewport height so the on-screen keyboard never covers the textarea. (No
+  // translate: the full-screen backdrop behind keeps the keyboard area solid.)
   useEffect(() => {
     const vv = window.visualViewport;
     if (!noteExpanded || !vv) return;
     const fit = () => {
       const el = noteOverlayRef.current;
-      if (!el) return;
-      el.style.height = `${vv.height}px`;
-      el.style.transform = `translateY(${vv.offsetTop}px)`;
+      if (el) el.style.height = `${vv.height}px`;
     };
     fit();
     vv.addEventListener("resize", fit);
