@@ -105,6 +105,28 @@ export function TransactionSheet({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const firstFieldRef = useRef<HTMLInputElement>(null);
+  const noteOverlayRef = useRef<HTMLDivElement>(null);
+
+  // iOS: the on-screen keyboard shrinks the visual viewport and scrolls the
+  // page, dragging a `fixed` overlay (and its close button) off the top of the
+  // screen. Pin the overlay to the visual viewport so it stays reachable.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!noteExpanded || !vv) return;
+    const fit = () => {
+      const el = noteOverlayRef.current;
+      if (!el) return;
+      el.style.height = `${vv.height}px`;
+      el.style.transform = `translateY(${vv.offsetTop}px)`;
+    };
+    fit();
+    vv.addEventListener("resize", fit);
+    vv.addEventListener("scroll", fit);
+    return () => {
+      vv.removeEventListener("resize", fit);
+      vv.removeEventListener("scroll", fit);
+    };
+  }, [noteExpanded]);
 
   const isEdit = Boolean(initial);
   const filteredCategories = categories.filter((c) =>
@@ -399,7 +421,8 @@ export function TransactionSheet({
 
       {open && noteExpanded ? (
         <div
-          className="fixed inset-0 z-[60] flex flex-col bg-bg-soft"
+          ref={noteOverlayRef}
+          className="fixed inset-x-0 top-0 z-[60] flex h-dvh flex-col bg-bg-soft"
           role="dialog"
           aria-modal="true"
           aria-label={t("tx.note")}
@@ -407,7 +430,7 @@ export function TransactionSheet({
             if (e.key === "Escape") setNoteExpanded(false);
           }}
         >
-          <div className="flex flex-none items-center justify-between border-b border-line px-5 py-4">
+          <div className="flex flex-none items-center justify-between border-b border-line px-5 py-4 pt-safe">
             <h2 className="text-lg font-bold">{t("tx.note")}</h2>
             <button
               type="button"
