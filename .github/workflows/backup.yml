@@ -1,16 +1,34 @@
 name: DB backup + keep-alive
 
-# Dumps the whole Supabase DB to backups/toptics.sql every 3 days and commits it.
-# Side effect: connecting every 3 days keeps the free-tier project from auto-pausing,
-# which is what was logging the user out (a paused project fails token refresh, so
-# middleware sees no session and redirects to /login).
-# One-time setup: add repo secret SUPABASE_DB_URL (Supabase > Settings > Database > Connection string, "URI").
+# Two independent jobs on purpose. The app is used only a few times a month, so
+# the keep-alive is what actually matters: a Supabase free project auto-pauses
+# after 7 days of inactivity and a paused project breaks login. The backup runs
+# separately so that when the dump breaks (it already has, twice), the
+# keep-alive keeps running instead of dying with it.
+#
+# Vercel Cron (vercel.json) hits the same keep-alive endpoint daily, so this is
+# the second layer, not the only one. That matters because GitHub disables
+# scheduled workflows in a repo with 60 days of no activity.
+#
+# One-time setup: repo secret SUPABASE_DB_URL. Use the *Session pooler* string
+# (Supabase > Connect > Session pooler), not the direct one: db.<ref>.supabase.co
+# resolves to IPv6 only and GitHub runners are IPv4 only.
 on:
   schedule:
     - cron: "0 3 */3 * *" # 03:00 UTC every 3rd day (< 7-day pause window)
   workflow_dispatch: {}    # lets you run it by hand from the Actions tab
 
 jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      # Hits the deployed app, which runs one PostgREST read. No secret and no
+      # database driver involved, so there is very little here that can rot.
+      - name: Ping the app's keep-alive endpoint
+        run: |
+          curl -fsS --retry 3 --retry-delay 15 --max-time 30 \
+            https://toptics.vercel.app/api/keep-alive
+
   backup:
     runs-on: ubuntu-latest
     permissions:
@@ -18,22 +36,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Supabase runs Postgres 17; the runner ships pg_dump 16, which refuses to dump a
-      # newer server. Install the matching client from the official PGDG apt repo.
-      - name: Install pg_dump 17
+      # Supabase upgrades Postgres on its own schedule and pg_dump refuses to
+      # dump a server newer than itself, so always install the newest client
+      # from the official PGDG apt repo rather than pinning a major version.
+      - name: Install the newest pg_dump
         run: |
           sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /usr/share/keyrings/pgdg.gpg
           sudo apt-get update
-          sudo apt-get install -y postgresql-client-17
+          sudo apt-get install -y postgresql-client
 
-      # pg_dump 17 stamps a random \restrict token at the top, which would make every
+      # pg_dump stamps a random \restrict token at the top, which would make every
       # dump differ even when the data is identical. Strip it so the commit step below
       # only fires on real data changes. The token is a restore-time guard, not data.
       - name: Dump database
         shell: bash # -eo pipefail, so a pg_dump failure isn't masked by the pipe
         run: |
-          /usr/lib/postgresql/17/bin/pg_dump --no-owner --no-privileges "${{ secrets.SUPABASE_DB_URL }}" \
+          PG_DUMP="$(ls -d /usr/lib/postgresql/*/bin/pg_dump | sort -V | tail -1)"
+          echo "using $PG_DUMP ($("$PG_DUMP" --version))"
+          "$PG_DUMP" --no-owner --no-privileges "${{ secrets.SUPABASE_DB_URL }}" \
             | grep -vE '^\\(un)?restrict ' > backups/toptics.sql
 
       - name: Commit if changed
