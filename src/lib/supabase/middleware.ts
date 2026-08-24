@@ -30,14 +30,21 @@ function hasSessionCookie(request: NextRequest) {
     );
 }
 
+// A call that times out and a call that fails mean different things: the first
+// says "auth is slow right now", the second says "this session is no good".
+const TIMED_OUT = "auth-deadline" as const;
+const FAILED = "auth-failed" as const;
+
 async function withDeadline<T>(promise: Promise<T>, ms: number) {
   let timer: ReturnType<typeof setTimeout>;
-  const deadline = new Promise<null>((resolve) => {
-    timer = setTimeout(() => resolve(null), ms);
+  const deadline = new Promise<typeof TIMED_OUT>((resolve) => {
+    timer = setTimeout(() => resolve(TIMED_OUT), ms);
   });
   try {
+    // The catch has to be attached to the promise itself, not to the race, or
+    // a rejection arriving after the deadline goes unhandled.
     return await Promise.race([
-      promise.catch(() => null),
+      promise.catch((): typeof FAILED => FAILED),
       deadline,
     ]);
   } finally {
@@ -88,12 +95,12 @@ export async function updateSession(request: NextRequest) {
   // writing refreshed cookies; legacy HS256 tokens fall back to a server call.
   const result = await withDeadline(supabase.auth.getClaims(), AUTH_TIMEOUT_MS);
 
-  // Deadline hit or the call failed: the request already carries a session
-  // cookie, so let it through instead of 504-ing or bouncing a signed-in user
-  // to /login. Row Level Security still gates every row the page can read.
-  if (result === null) return response;
+  // Deadline hit: the request already carries a session cookie, so let it
+  // through instead of 504-ing or bouncing a signed-in user to /login. Row
+  // Level Security still gates every row the page can read.
+  if (result === TIMED_OUT) return response;
 
-  const user = result.data?.claims ?? null;
+  const user = result === FAILED ? null : result.data?.claims ?? null;
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
