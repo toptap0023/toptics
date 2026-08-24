@@ -123,7 +123,7 @@ All tables RLS-protected (per-user). `handle_new_user` trigger seeds wallet + de
 
 **Env (NEXT_PUBLIC, public-safe):** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
-**Deploy:** `npx vercel --prod` (user authenticates Vercel/Supabase; agent runs CLI with cached session).
+**Deploy:** push to `main`. The Vercel project is git-connected and builds production on push, so no CLI step is needed (verified 2026-08-24; the local `vercel` CLI is logged out and production was still current).
 
 **Remaining manual config (Supabase dashboard, user-only):**
 1. Auth → URL Configuration: Site URL `https://toptics.vercel.app` + Redirect `https://toptics.vercel.app/**` (keep localhost).
