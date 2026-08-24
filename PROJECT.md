@@ -4,7 +4,7 @@ A mobile-first personal finance tracker. **Next.js 15 (App Router) · React 19 �
 Dark-first, iPhone-class, **single currency THB**, **Asia/Bangkok**, whole numbers (no decimals), SVG icons only (no emoji).
 
 - **Live:** https://toptics.vercel.app
-- **Repo root:** `/Users/iconkaset-top/Downloads/spendee clone`
+- **Repo root:** `~/Projects/side/spendee-clone`
 - **Supabase:** project `vderzhxfenyvpwztedfb`, region `ap-south-1` (Mumbai)
 - **Vercel:** project `toptics`, functions pinned to `bom1` (Mumbai) — see [Performance](#7-performance--optimization)
 
@@ -129,6 +129,30 @@ All tables RLS-protected (per-user). `handle_new_user` trigger seeds wallet + de
 1. Auth → URL Configuration: Site URL `https://toptics.vercel.app` + Redirect `https://toptics.vercel.app/**` (keep localhost).
 2. Reset-password email template must include `{{ .Token }}` (OTP code).
 3. Free-tier email rate limit is low.
+
+## 8b. Staying alive between visits
+
+The app is used a few times a month, which is exactly the usage pattern that
+breaks a free Supabase project. Three things guard it, and all three exist
+because each one has already failed once:
+
+1. **Auto-pause.** Supabase pauses a free project after 7 days with no
+   activity, and a paused project fails token refresh, so login dies.
+   `/api/keep-alive` does one trivial PostgREST read; Vercel Cron
+   (`vercel.json`) hits it daily and `.github/workflows/backup.yml` hits it
+   every 3 days. Two independent schedulers on purpose.
+2. **Middleware is the only auth gate** (`(app)/layout.tsx` does not re-check).
+   So anything slow in `src/lib/supabase/middleware.ts` takes the whole app
+   down with a Vercel 504 `MIDDLEWARE_INVOCATION_TIMEOUT`, public pages
+   included. It therefore skips the network entirely when there is no session
+   cookie, and caps `getClaims()` at 3s, passing the request through on
+   timeout (RLS still gates every row).
+3. **`SUPABASE_DB_URL` must be the Session pooler string.**
+   `db.<ref>.supabase.co` resolves to IPv6 only and GitHub runners are IPv4
+   only, so the direct connection string silently stops working. This killed
+   the backup (and, back when they were the same job, the keep-alive) from
+   2026-08-19. Do not pin a pg_dump major version either: Supabase upgrades
+   Postgres on its own schedule and an older client refuses a newer server.
 
 ---
 
