@@ -4,7 +4,7 @@
 
 
 -- Dumped from database version 17.6
--- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
+-- Dumped by pg_dump version 18.6 (Ubuntu 18.6-1.pgdg24.04+2)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -448,11 +448,12 @@ COMMENT ON FUNCTION extensions.grant_pg_cron_access() IS 'Grants access to pg_cr
 
 CREATE FUNCTION extensions.grant_pg_graphql_access() RETURNS event_trigger
     LANGUAGE plpgsql
+    SET search_path TO ''
     AS $_$
 begin
     if not exists (
         select 1
-        from pg_event_trigger_ddl_commands() ev
+        from pg_catalog.pg_event_trigger_ddl_commands() ev
         join pg_catalog.pg_extension e on ev.objid = e.oid
         where e.extname = 'pg_graphql'
     ) then
@@ -468,6 +469,7 @@ begin
     )
         returns jsonb
         language sql
+        set search_path to ''
     as $$
         select graphql.resolve(
             query := query,
@@ -1790,13 +1792,13 @@ $$;
 --
 
 CREATE FUNCTION storage.filename(name text) RETURNS text
-    LANGUAGE plpgsql
+    LANGUAGE plpgsql IMMUTABLE
     AS $$
 DECLARE
-_parts text[];
+    _parts text[];
 BEGIN
-	select string_to_array(name, '/') into _parts;
-	return _parts[array_length(_parts,1)];
+    SELECT string_to_array(name, '/') INTO _parts;
+    RETURN _parts[array_length(_parts, 1)];
 END
 $$;
 
@@ -2160,6 +2162,9 @@ DECLARE
     v_limit INT;
     v_prefix TEXT;
     v_prefix_lower TEXT;
+    v_prefix_len INT;
+    v_prefix_start INT;
+    v_combined_levels INT;
     v_is_asc BOOLEAN;
     v_order_by TEXT;
     v_sort_order TEXT;
@@ -2180,6 +2185,9 @@ BEGIN
     v_limit := LEAST(coalesce(limits, 100), 1500);
     v_prefix := coalesce(prefix, '') || coalesce(search, '');
     v_prefix_lower := lower(v_prefix);
+    v_prefix_len := length(coalesce(prefix, ''));
+    v_prefix_start := coalesce(array_length(string_to_array(coalesce(prefix, ''), v_delimiter), 1), 1);
+    v_combined_levels := coalesce(array_length(string_to_array(v_prefix, v_delimiter), 1), 1);
     v_is_asc := lower(coalesce(sortorder, 'asc')) = 'asc';
     v_file_batch_size := LEAST(GREATEST(v_limit * 2, 100), 1000);
 
@@ -2195,17 +2203,17 @@ BEGIN
     v_sort_order := CASE WHEN v_is_asc THEN 'asc' ELSE 'desc' END;
 
     -- ========================================================================
-    -- NON-NAME SORTING: Use path_tokens approach (unchanged)
+    -- NON-NAME SORTING: Use path_tokens approach
     -- ========================================================================
     IF v_order_by != 'name' THEN
         RETURN QUERY EXECUTE format(
             $sql$
             WITH folders AS (
-                SELECT path_tokens[$1] AS folder
+                SELECT array_to_string(path_tokens[$1:$2], '/') AS folder
                 FROM storage.objects
-                WHERE objects.name ILIKE $2 || '%%'
-                  AND bucket_id = $3
-                  AND array_length(objects.path_tokens, 1) <> $1
+                WHERE objects.name ILIKE $3 || '%%'
+                  AND bucket_id = $4
+                  AND array_length(objects.path_tokens, 1) <> $2
                 GROUP BY folder
                 ORDER BY folder %s
             )
@@ -2216,16 +2224,16 @@ BEGIN
                    NULL::timestamptz AS last_accessed_at,
                    NULL::jsonb AS metadata FROM folders)
             UNION ALL
-            (SELECT path_tokens[$1] AS "name",
+            (SELECT array_to_string(path_tokens[$1:$2], '/') AS "name",
                    id, updated_at, created_at, last_accessed_at, metadata
              FROM storage.objects
-             WHERE objects.name ILIKE $2 || '%%'
-               AND bucket_id = $3
-               AND array_length(objects.path_tokens, 1) = $1
+             WHERE objects.name ILIKE $3 || '%%'
+               AND bucket_id = $4
+               AND array_length(objects.path_tokens, 1) = $2
              ORDER BY %I %s)
-            LIMIT $4 OFFSET $5
+            LIMIT $5 OFFSET $6
             $sql$, v_sort_order, v_order_by, v_sort_order
-        ) USING levels, v_prefix, bucketname, v_limit, offsets;
+        ) USING v_prefix_start, v_combined_levels, v_prefix, bucketname, v_limit, offsets;
         RETURN;
     END IF;
 
@@ -2335,7 +2343,7 @@ BEGIN
             IF v_skipped < offsets THEN
                 v_skipped := v_skipped + 1;
             ELSE
-                name := split_part(rtrim(storage.get_common_prefix(v_peek_name, v_prefix, v_delimiter), v_delimiter), v_delimiter, levels);
+                name := substring(rtrim(storage.get_common_prefix(v_peek_name, v_prefix, v_delimiter), v_delimiter) from v_prefix_len + 1);
                 id := NULL;
                 updated_at := NULL;
                 created_at := NULL;
@@ -2372,7 +2380,7 @@ BEGIN
                     v_skipped := v_skipped + 1;
                 ELSE
                     -- Emit file
-                    name := split_part(v_current.name, v_delimiter, levels);
+                    name := substring(v_current.name from v_prefix_len + 1);
                     id := v_current.id;
                     updated_at := v_current.updated_at;
                     created_at := v_current.created_at;
@@ -2408,10 +2416,26 @@ DECLARE
     v_cursor_op text;
     v_query text;
     v_prefix text;
+    v_sort_order text;
+    v_sort_column text;
 BEGIN
     v_prefix := coalesce(p_prefix, '');
 
-    IF p_sort_order = 'asc' THEN
+    -- Defense-in-depth: this function is independently reachable and must
+    -- not trust p_sort_order/p_sort_column to already be validated by a
+    -- caller. Normalize to the same strict allow-list storage.search_v2
+    -- uses before interpolating anything into dynamic SQL below.
+    v_sort_order := lower(coalesce(p_sort_order, 'asc'));
+    IF v_sort_order NOT IN ('asc', 'desc') THEN
+        v_sort_order := 'asc';
+    END IF;
+
+    v_sort_column := lower(coalesce(p_sort_column, 'updated_at'));
+    IF v_sort_column NOT IN ('updated_at', 'created_at') THEN
+        v_sort_column := 'updated_at';
+    END IF;
+
+    IF v_sort_order = 'asc' THEN
         v_cursor_op := '>';
     ELSE
         v_cursor_op := '<';
@@ -2491,11 +2515,11 @@ BEGIN
             name COLLATE "C" %s
         LIMIT $4
     $sql$,
-        p_sort_column,
+        v_sort_column,
         v_cursor_op,
-        p_sort_column,
-        p_sort_order,
-        p_sort_order
+        v_sort_column,
+        v_sort_order,
+        v_sort_order
     );
 
     RETURN QUERY EXECUTE v_query
@@ -3429,7 +3453,11 @@ CREATE TABLE storage.buckets (
     file_size_limit bigint,
     allowed_mime_types text[],
     owner_id text,
-    type storage.buckettype DEFAULT 'STANDARD'::storage.buckettype NOT NULL
+    type storage.buckettype DEFAULT 'STANDARD'::storage.buckettype NOT NULL,
+    versioning_status text DEFAULT 'DISABLED'::text NOT NULL,
+    CONSTRAINT buckets_versioning_dark_check CHECK ((versioning_status = 'DISABLED'::text)),
+    CONSTRAINT buckets_versioning_standard_only_check CHECK (((type = 'STANDARD'::storage.buckettype) OR (versioning_status = 'DISABLED'::text))),
+    CONSTRAINT buckets_versioning_status_check CHECK ((versioning_status = ANY (ARRAY['DISABLED'::text, 'ENABLED'::text, 'SUSPENDED'::text])))
 );
 
 
@@ -3495,7 +3523,10 @@ CREATE TABLE storage.objects (
     path_tokens text[] GENERATED ALWAYS AS (string_to_array(name, '/'::text)) STORED,
     version text,
     owner_id text,
-    user_metadata jsonb
+    user_metadata jsonb,
+    archived_at timestamp with time zone,
+    is_delete_marker boolean DEFAULT false NOT NULL,
+    is_versioned boolean DEFAULT false NOT NULL
 );
 
 
@@ -3817,7 +3848,10 @@ COPY auth.refresh_tokens (instance_id, id, token, user_id, revoked, created_at, 
 00000000-0000-0000-0000-000000000000	120	62r6bxibvt6o	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-12 05:58:04.677508+00	2026-08-15 17:20:03.011451+00	jsfcxcuq4qmi	244e8039-cd4d-49d4-a090-6a756f668db7
 00000000-0000-0000-0000-000000000000	124	6jfa5mxlzk4n	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-08-15 17:20:03.020997+00	2026-08-15 17:20:03.020997+00	62r6bxibvt6o	244e8039-cd4d-49d4-a090-6a756f668db7
 00000000-0000-0000-0000-000000000000	123	jcrv2yqop6gt	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-15 12:10:35.619319+00	2026-08-15 17:20:28.50023+00	eprgjj3fl4vs	f1187015-e8db-44dd-8929-4a47e190f014
-00000000-0000-0000-0000-000000000000	125	rfuzpkt4pyyi	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-08-15 17:20:28.509989+00	2026-08-15 17:20:28.509989+00	jcrv2yqop6gt	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	125	rfuzpkt4pyyi	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-15 17:20:28.509989+00	2026-08-16 07:24:01.321353+00	jcrv2yqop6gt	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	126	rqc2m2julf72	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-16 07:24:01.342864+00	2026-08-16 18:15:25.004496+00	rfuzpkt4pyyi	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	127	6ydxq7r35na6	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-16 18:15:25.017172+00	2026-08-24 06:56:21.277969+00	rqc2m2julf72	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	128	jxjnxwyrpvwd	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-08-24 06:56:21.285865+00	2026-08-24 06:56:21.285865+00	6ydxq7r35na6	f1187015-e8db-44dd-8929-4a47e190f014
 \.
 
 
@@ -3936,7 +3970,7 @@ bcef162c-5374-4683-b45f-4b69b36e3897	89edc986-7e11-4a99-8556-5185a536ae90	2026-0
 7d3c05c8-595e-4948-8e12-2893585c7d32	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-19 12:00:18.773296+00	2026-06-19 17:26:04.088219+00	\N	aal1	\N	2026-06-19 17:26:04.088112	Next.js Middleware	49.230.59.39	\N	\N	\N	\N	\N
 e756307f-3418-4110-bdf3-efd5e11bf316	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-20 06:21:00.062722+00	2026-06-20 14:58:11.663986+00	\N	aal1	\N	2026-06-20 14:58:11.663854	Vercel Edge Functions	18.141.143.40	\N	\N	\N	\N	\N
 244e8039-cd4d-49d4-a090-6a756f668db7	89edc986-7e11-4a99-8556-5185a536ae90	2026-07-07 18:57:04.703142+00	2026-08-15 17:20:03.041513+00	\N	aal1	\N	2026-08-15 17:20:03.041384	Vercel Edge Functions	54.169.49.174	\N	\N	\N	\N	\N
-f1187015-e8db-44dd-8929-4a47e190f014	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-23 03:50:47.319628+00	2026-08-15 17:20:28.533419+00	\N	aal1	\N	2026-08-15 17:20:28.533282	Vercel Edge Functions	13.214.121.136	\N	\N	\N	\N	\N
+f1187015-e8db-44dd-8929-4a47e190f014	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-23 03:50:47.319628+00	2026-08-24 06:56:21.30136+00	\N	aal1	\N	2026-08-24 06:56:21.301253	Vercel Edge Functions	54.255.234.1	\N	\N	\N	\N	\N
 1f35033d-bc59-460b-8a82-f37f60c9d80d	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-22 06:39:51.643206+00	2026-06-22 07:41:00.275026+00	\N	aal1	\N	2026-06-22 07:41:00.274899	Next.js Middleware	171.98.227.16	\N	\N	\N	\N	\N
 024f29d9-d78c-4c57-bf05-d47c84100daf	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-19 11:43:42.007684+00	2026-06-22 12:14:54.983175+00	\N	aal1	\N	2026-06-22 12:14:54.983073	Vercel Edge Functions	13.229.198.201	\N	\N	\N	\N	\N
 0f2868ef-982f-488b-8a70-73e5693a6ff4	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-22 12:40:25.050776+00	2026-06-23 00:57:00.460997+00	\N	aal1	\N	2026-06-23 00:57:00.460872	Vercel Edge Functions	13.212.216.240	\N	\N	\N	\N	\N
@@ -3966,7 +4000,7 @@ COPY auth.sso_providers (id, resource_id, created_at, updated_at, disabled) FROM
 
 COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, invited_at, confirmation_token, confirmation_sent_at, recovery_token, recovery_sent_at, email_change_token_new, email_change, email_change_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, phone_change, phone_change_token, phone_change_sent_at, email_change_token_current, email_change_confirm_status, banned_until, reauthentication_token, reauthentication_sent_at, is_sso_user, deleted_at, is_anonymous) FROM stdin;
 00000000-0000-0000-0000-000000000000	7caa1992-85c0-4586-ab7a-89754bc37f70	authenticated	authenticated	nannatthamat@gmail.com	$2a$10$wQ0cvs/xc9drGlxpjGpfvur6waC/SZ.JOkhtGb5r/B5fvV2055Yxa	2026-06-19 09:23:48.880079+00	\N		2026-06-19 09:23:32.455766+00		\N			\N	2026-06-20 10:57:46.183579+00	{"provider": "email", "providers": ["email"]}	{"sub": "7caa1992-85c0-4586-ab7a-89754bc37f70", "email": "nannatthamat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-19 09:23:32.402465+00	2026-07-20 05:46:38.768952+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	89edc986-7e11-4a99-8556-5185a536ae90	authenticated	authenticated	tre.thitipat@gmail.com	$2a$10$QgbAASk6F4Oc.bhIrfPdD.qe4P5vnQtY5eb8WRLzOA83D/3NHBNk2	2026-06-18 16:31:25.147218+00	\N		2026-06-18 16:30:58.687866+00	pkce_a6520a32c7e467ca1f59dbabe1ee0805aa906573b7890ebf93cb2e44	2026-06-19 06:41:33.947066+00			\N	2026-08-10 17:15:11.599738+00	{"provider": "email", "providers": ["email"]}	{"sub": "89edc986-7e11-4a99-8556-5185a536ae90", "email": "tre.thitipat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-18 16:30:58.656575+00	2026-08-15 17:20:28.522286+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	89edc986-7e11-4a99-8556-5185a536ae90	authenticated	authenticated	tre.thitipat@gmail.com	$2a$10$QgbAASk6F4Oc.bhIrfPdD.qe4P5vnQtY5eb8WRLzOA83D/3NHBNk2	2026-06-18 16:31:25.147218+00	\N		2026-06-18 16:30:58.687866+00	pkce_a6520a32c7e467ca1f59dbabe1ee0805aa906573b7890ebf93cb2e44	2026-06-19 06:41:33.947066+00			\N	2026-08-10 17:15:11.599738+00	{"provider": "email", "providers": ["email"]}	{"sub": "89edc986-7e11-4a99-8556-5185a536ae90", "email": "tre.thitipat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-18 16:30:58.656575+00	2026-08-24 06:56:21.290407+00	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
 
@@ -4825,6 +4859,7 @@ d2c02b15-b08b-4ae5-939d-d4c981dc3f9f	89edc986-7e11-4a99-8556-5185a536ae90	101033
 c890e617-e1aa-4905-b06b-0044788dbbf7	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	3c6a1afb-8ac9-4ff4-ae5c-984d1da64099	expense	6000.00	Srixon Z585 (5-PW) 2018: -6,000 บาท	2026-08-06	2026-08-05 17:12:01.87214+00
 d3ef7745-5ed3-46de-9672-d98c9b169b36	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	52c33614-9c9a-4025-b5e0-f946961dbf7a	income	6900.00	ขาย xxio esk x black forged 2020 5-9 iron set\r\nซื้อมาปีที่แล้ว 5000 บาทขายได้ 6900 บาทกำไร 1900	2026-08-06	2026-08-05 17:13:31.100972+00
 5db5caf1-be17-42a4-a260-78fb56445f77	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	4446b97a-784c-430d-aeeb-b58b1a84456f	expense	20500.00	Kumho Ecsta PS72ev ราคา 20,500 บาท \r\nupdated 15 aug 26 เปลี่ยนแล้ว ตอน 136,000km เปลี่ยนอีกทีตอน 166,000 km or aug 2029	2026-08-15	2026-08-15 09:13:05.879094+00
+7b17a65b-9f3f-4644-a55c-43058d294d9e	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	7ccd7b72-f652-4049-bbb9-18c819c7d72c	expense	1720.00	รองเท้า	2026-08-17	2026-08-16 18:15:44.514966+00
 c3d40554-ca4b-4546-855d-473137d14bcd	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	3c6a1afb-8ac9-4ff4-ae5c-984d1da64099	expense	19420.00	=== รายการซื้ออุปกรณ์กอล์ฟ (Sport Items Breakdown) ===\r\n\r\n• Driver: PING G430 Max (Shaft S-Flex)\r\n  - ราคา: ฿6,800\r\n\r\n• Hybrid: Titleist TS3\r\n  - ราคา: ฿2,500\r\n\r\n• Iron Set: Mizuno Pro 319 (4-PW / Shaft Modus 105)\r\n  - ราคา: ฿6,700\r\n\r\n• Wedges: XXIO (AW + SW)\r\n  - ราคา: ฿1,800\r\n\r\n• Wedge/Iron: Bridgestone JGR Tour B (PW)\r\n  - ราคา: ฿1,100\r\n\r\n--------------------------------------------------\r\nรวมต้นทุนอุปกรณ์ทั้งหมด: ฿18,900	2026-07-15	2026-08-01 16:33:57.269431+00
 \.
 
@@ -4940,7 +4975,7 @@ COPY realtime.subscription (id, subscription_id, entity, filters, claims, create
 -- Data for Name: buckets; Type: TABLE DATA; Schema: storage; Owner: -
 --
 
-COPY storage.buckets (id, name, owner, created_at, updated_at, public, avif_autodetection, file_size_limit, allowed_mime_types, owner_id, type) FROM stdin;
+COPY storage.buckets (id, name, owner, created_at, updated_at, public, avif_autodetection, file_size_limit, allowed_mime_types, owner_id, type, versioning_status) FROM stdin;
 \.
 
 
@@ -5026,6 +5061,10 @@ COPY storage.migrations (id, name, hash, executed_at) FROM stdin;
 58	operation-ergonomics	00ca5d483b3fe0d522133d9002ccc5df98365120	2026-06-18 13:51:20.348052
 59	drop-unused-functions	38456f13e39691c2bbb4b5151d0d1cdbabd4a8c4	2026-06-18 13:51:20.353124
 60	optimize-existing-functions-again	db35e1c91a9201e59f4fef8d972c2f277d68b157	2026-06-18 13:51:20.356531
+61	mark-filename-immutable	fe0096517ae9d60aaec1d110172ba9036dc66bb7	2026-08-24 05:53:38.381573
+62	object-versioning-core	0b855f00ff3be0bfca91efee02a9858912491a9a	2026-08-24 05:53:38.405088
+63	fix-search-name-relative-to-prefix	c7485e417624f795ce8bb2da21927f48e088904d	2026-08-24 05:53:38.428066
+64	fix-search-by-timestamp-sqli	0af424ecd388a39bb1645184b222185a12149675	2026-08-24 05:53:38.436606
 \.
 
 
@@ -5033,7 +5072,7 @@ COPY storage.migrations (id, name, hash, executed_at) FROM stdin;
 -- Data for Name: objects; Type: TABLE DATA; Schema: storage; Owner: -
 --
 
-COPY storage.objects (id, bucket_id, name, owner, created_at, updated_at, last_accessed_at, metadata, version, owner_id, user_metadata) FROM stdin;
+COPY storage.objects (id, bucket_id, name, owner, created_at, updated_at, last_accessed_at, metadata, version, owner_id, user_metadata, archived_at, is_delete_marker, is_versioned) FROM stdin;
 \.
 
 
@@ -5088,7 +5127,7 @@ COPY vault.secrets (id, name, description, secret, key_id, nonce, created_at, up
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: -
 --
 
-SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 125, true);
+SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 128, true);
 
 
 --
