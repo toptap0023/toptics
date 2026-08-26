@@ -4,7 +4,7 @@ A mobile-first personal finance tracker. **Next.js 15 (App Router) · React 19 �
 Dark-first, iPhone-class, **single currency THB**, **Asia/Bangkok**, whole numbers (no decimals), SVG icons only (no emoji).
 
 - **Live:** https://toptics.vercel.app
-- **Repo root:** `~/Projects/side/spendee-clone`
+- **Repo root:** `~/Projects/apps/spendee-clone`
 - **Supabase:** project `vderzhxfenyvpwztedfb`, region `ap-south-1` (Mumbai)
 - **Vercel:** project `toptics`, functions pinned to `bom1` (Mumbai) — see [Performance](#7-performance--optimization)
 

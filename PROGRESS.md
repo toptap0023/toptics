@@ -67,7 +67,7 @@ Repo: https://github.com/toptap0023/TOPtics (branch หลัก `main`)
 | ลิมิตความยาว note | เอาออก ไม่จำกัด | เจ้าของใช้ note เก็บรายละเอียดสำคัญไว้อ่านเอง ตรวจแล้วคอลัมน์ `note` ใน `supabase/schema.sql` เป็น `text` และ server action ใน `src/app/(app)/actions.ts` แค่ `.trim()` ไม่มี validate ความยาว จึงปลอดภัย |
 | note state | เปลี่ยนจาก uncontrolled เป็น controlled | จำเป็นเพื่อให้ค่าที่พิมพ์ในหน้าเต็มจอกับช่องในฟอร์ม sync กัน state reset ตอนเปิด sheet |
 | วิธีกัน Supabase pause | GitHub Actions dump ทุก 3 วัน | ตกไป: อัปเกรด Supabase Pro ($25/เดือน) แพงเกินสำหรับ side project / ตกไป: Vercel Cron เพราะ Hobby plan รันได้วันละครั้งเท่านั้น ซึ่งเฉียดเกณฑ์ "a few requests each day" ที่ Supabase ระบุ / เลือกแบบ dump เพราะได้ backup เป็นของแถม ซึ่งมีค่ามากกับข้อมูลที่บันทึกเดือนละครั้ง |
-| ลอก pattern จาก TOPasset | ใช้ไฟล์เดียวกันเกือบทั้งดุ้น | `~/Projects/personal/top-asset/.github/workflows/backup.yml` พิสูจน์แล้วว่าใช้ได้จริง รวมถึงท่าแก้ปัญหา pg_dump เวอร์ชันไม่ตรงและ strip `\restrict` token |
+| ลอก pattern จาก TOPasset | ใช้ไฟล์เดียวกันเกือบทั้งดุ้น | `~/Projects/apps/top-asset/.github/workflows/backup.yml` พิสูจน์แล้วว่าใช้ได้จริง รวมถึงท่าแก้ปัญหา pg_dump เวอร์ชันไม่ตรงและ strip `\restrict` token |
 
 ---
 
