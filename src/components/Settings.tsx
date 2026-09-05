@@ -16,6 +16,7 @@ import { ImportSheet } from "@/components/ImportSheet";
 import { useI18n } from "@/components/LanguageProvider";
 import { useToast } from "@/components/Toast";
 import { copyText } from "@/lib/clipboard";
+import { exportAllTransactionsCsv } from "@/app/(app)/actions";
 
 /* ----------------------------- CSV export ----------------------------- */
 
@@ -67,6 +68,40 @@ export function Settings({
   const [error, setError] = useState<string | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [exportCsv, setExportCsv] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+
+  /** Download every transaction as a UTF-8 (BOM) CSV that Excel opens cleanly. */
+  async function downloadAll() {
+    setDownloading(true);
+    setExportCsv(null);
+    setExportMsg(null);
+    try {
+      const res = await exportAllTransactionsCsv();
+      if ("error" in res) {
+        setExportMsg(res.error);
+        return;
+      }
+      if (res.rows === 0) {
+        setExportMsg(t("export.none"));
+        return;
+      }
+      const blob = new Blob(["\ufeff", res.csv], {
+        type: "text/csv;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `toptics-all-${todayISO()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      toast(t("export.downloaded", { n: res.rows }));
+      setExportMsg(t("export.downloaded", { n: res.rows }));
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   async function exportRange(meta: string, months: number) {
     const today = todayISO();
@@ -160,6 +195,16 @@ export function Settings({
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={downloadAll}
+              disabled={downloading}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal px-4 py-3 text-sm font-semibold text-bg shadow-glow transition-colors duration-200 hover:bg-teal-dark disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ArrowDownIcon className="w-4 h-4" />
+              {downloading ? t("export.preparing") : t("export.all")}
+            </button>
+            <p className="text-xs text-ink-muted">{t("export.allDesc")}</p>
             {exportMsg ? (
               <p role="status" className="text-sm text-teal-light">
                 {exportMsg}

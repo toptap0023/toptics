@@ -48,6 +48,11 @@ const en: Dict = {
   "export.3m": "3 months",
   "export.6m": "6 months",
   "export.1y": "1 year",
+  "export.all": "Download everything (.csv)",
+  "export.allDesc":
+    "Every transaction since day one, as a file Excel or Numbers opens directly. Use it to back up or move to another app.",
+  "export.preparing": "Preparing file...",
+  "export.downloaded": "Downloaded {n} rows.",
 
   // home
   "home.viewInsights": "View {month} insights",
@@ -242,6 +247,11 @@ const th: Dict = {
   "export.3m": "3 เดือน",
   "export.6m": "6 เดือน",
   "export.1y": "1 ปี",
+  "export.all": "ดาวน์โหลดทั้งหมด (.csv)",
+  "export.allDesc":
+    "ทุกรายการตั้งแต่วันแรก เป็นไฟล์ที่เปิดใน Excel หรือ Numbers ได้ทันที ใช้สำรองข้อมูลหรือย้ายไปแอปอื่น",
+  "export.preparing": "กำลังเตรียมไฟล์...",
+  "export.downloaded": "ดาวน์โหลดแล้ว {n} รายการ",
 
   // home
   "home.viewInsights": "ดูบทวิเคราะห์ {month}",

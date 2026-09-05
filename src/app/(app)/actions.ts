@@ -267,3 +267,55 @@ export async function importTransactions(formData: FormData) {
   revalidateAll();
   return { ok: true, count: rows.length };
 }
+
+/* ------------------------------- Export all ------------------------------ */
+
+const EXPORT_PAGE = 1000; // PostgREST caps a single select at 1000 rows
+
+function csvCell(s: string): string {
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+/** Every transaction the user owns, oldest first, as CSV text (no BOM).
+ *  Fetched in pages so the file is never silently truncated at 1000 rows. */
+export async function exportAllTransactionsCsv(): Promise<
+  { csv: string; rows: number } | { error: string }
+> {
+  const { supabase, user } = await requireUser();
+
+  type Row = {
+    occurred_on: string;
+    type: TxType;
+    amount: number;
+    note: string | null;
+    category: { name: string; is_investment: boolean } | null;
+  };
+
+  const all: Row[] = [];
+  for (let from = 0; ; from += EXPORT_PAGE) {
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("occurred_on,type,amount,note,category:categories(name,is_investment)")
+      .eq("user_id", user.id)
+      .order("occurred_on", { ascending: true })
+      .order("created_at", { ascending: true })
+      .range(from, from + EXPORT_PAGE - 1);
+    if (error) return { error: error.message };
+    const page = (data ?? []) as unknown as Row[];
+    all.push(...page);
+    if (page.length < EXPORT_PAGE) break;
+  }
+
+  const header = "date,type,category,is_investment,amount,note";
+  const lines = all.map((t) =>
+    [
+      t.occurred_on,
+      t.type,
+      csvCell(t.category?.name ?? "Uncategorized"),
+      t.category?.is_investment ? "yes" : "no",
+      String(Math.round(Number(t.amount))),
+      csvCell(t.note ?? ""),
+    ].join(",")
+  );
+  return { csv: [header, ...lines].join("\r\n"), rows: all.length };
+}
