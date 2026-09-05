@@ -46,6 +46,17 @@ button {
   font-size: 16px;
 }
 
+/* Amount fields: no desktop spinner arrows (mobile never shows them anyway) */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* Visible, consistent focus ring for keyboard users (Apple blue) */
 :focus-visible {
   outline: 2px solid #0a84ff;
