@@ -1,6 +1,6 @@
 # PROGRESS - TOPtics (spendee-clone)
 
-อัปเดตล่าสุด: 2 สิงหาคม 2026
+อัปเดตล่าสุด: 2026-09-05
 
 แอปบันทึกรายรับรายจ่ายส่วนตัว (Next.js 15 + React 19 + Tailwind 3 + Supabase)
 เจ้าของใช้งานจริงทุกวัน แต่มักบันทึกข้อมูลเป็นรอบ ประมาณเดือนละครั้ง ซึ่งเป็น
@@ -20,6 +20,17 @@ Repo: https://github.com/toptap0023/TOPtics (branch หลัก `main`)
 ---
 
 ## งานที่ทำในเซสชันนี้
+
+### 0. (2026-09-05) ปุ่มดาวน์โหลดทุกรายการเป็น CSV
+
+เพิ่มปุ่ม "ดาวน์โหลดทั้งหมด (.csv)" ในการ์ด Export ของ Settings (commit `e30b459`)
+- server action `exportAllTransactionsCsv` ใน `src/app/(app)/actions.ts` ดึงทุกแถวเป็นหน้า 1,000 แถว
+  (PostgREST cap) ต่อกัน เรียงเก่าไปใหม่ คอลัมน์ `date,type,category,is_investment,amount,note`
+- ฝั่ง client สร้าง Blob พร้อม BOM ให้ Excel อ่านไทยถูก ชื่อไฟล์ `toptics-all-<วันที่>.csv`
+- ปุ่ม copy 4 ช่วงเดิม (สำหรับวางแชต AI) คงไว้ตามเดิม
+- ยังไม่ได้ทดสอบกดจริงในเบราว์เซอร์ เพราะ session ไม่มี login ของเจ้าของ ผ่านแค่ tsc และ next build
+  เจ้าของควรกดทดสอบครั้งแรกบน iPhone ว่า share sheet เด้งและไฟล์เปิดใน Numbers/Excel ได้
+
 
 ### 1. ช่อง Note ในหน้าบันทึกรายการ
 
