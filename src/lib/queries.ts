@@ -21,6 +21,25 @@ export async function getCategories(): Promise<Category[]> {
   return data ?? [];
 }
 
+/** How many transactions use each category (category_id -> count). Paged so
+ *  the PostgREST 1000-row cap never undercounts. */
+export async function getCategoryUsage(): Promise<Record<string, number>> {
+  const supabase = await createClient();
+  const usage: Record<string, number> = {};
+  const PAGE = 1000;
+  for (let from = 0; ; from += PAGE) {
+    const { data } = await supabase
+      .from("transactions")
+      .select("category_id")
+      .not("category_id", "is", null)
+      .range(from, from + PAGE - 1);
+    const rows = (data ?? []) as { category_id: string }[];
+    for (const r of rows) usage[r.category_id] = (usage[r.category_id] ?? 0) + 1;
+    if (rows.length < PAGE) break;
+  }
+  return usage;
+}
+
 interface TxFilter {
   limit?: number;
   from?: string;

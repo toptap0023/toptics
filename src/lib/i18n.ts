@@ -36,7 +36,11 @@ const en: Dict = {
   "cat.newName": "New category name",
   "cat.add": "Add category",
   "cat.nameError": "Name your category.",
-  "cat.confirmDelete": "Delete this category?",
+  "cat.subtitle": "Income, expense, investment",
+  "cat.usage": "{n} transactions",
+  "cat.armDelete": "Tap again",
+  "cat.deleteHint": "Its transactions become uncategorized.",
+  "common.back": "Back",
   // data
   "data.title": "Data",
   "import.desc":
@@ -239,7 +243,11 @@ const th: Dict = {
   "cat.newName": "ชื่อหมวดหมู่ใหม่",
   "cat.add": "เพิ่มหมวดหมู่",
   "cat.nameError": "ตั้งชื่อหมวดหมู่",
-  "cat.confirmDelete": "ลบหมวดหมู่นี้?",
+  "cat.subtitle": "รายรับ, รายจ่าย, ลงทุน",
+  "cat.usage": "{n} รายการ",
+  "cat.armDelete": "แตะอีกครั้ง",
+  "cat.deleteHint": "รายการในหมวดนี้จะกลายเป็นไม่มีหมวดหมู่",
+  "common.back": "ย้อนกลับ",
   // data
   "data.title": "ข้อมูล",
   "import.desc":

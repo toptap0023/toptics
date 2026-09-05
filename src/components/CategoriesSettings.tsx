@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Category } from "@/lib/types";
 import { Card } from "@/components/Card";
@@ -9,7 +9,13 @@ import { createCategory, deleteCategory } from "@/app/(app)/actions";
 import { useI18n } from "@/components/LanguageProvider";
 import { useToast } from "@/components/Toast";
 
-export function CategoriesSettings({ categories }: { categories: Category[] }) {
+export function CategoriesSettings({
+  categories,
+  usage,
+}: {
+  categories: Category[];
+  usage: Record<string, number>;
+}) {
   const router = useRouter();
   const { t } = useI18n();
   const toast = useToast();
@@ -18,6 +24,13 @@ export function CategoriesSettings({ categories }: { categories: Category[] }) {
   const [cName, setCName] = useState("");
   const [cType, setCType] = useState<"expense" | "income">("expense");
   const [cInvest, setCInvest] = useState(false);
+  // Two-tap delete: the first tap arms one row for 3s, the second deletes.
+  const [armedId, setArmedId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!armedId) return;
+    const id = setTimeout(() => setArmedId(null), 3000);
+    return () => clearTimeout(id);
+  }, [armedId]);
 
   function run(fn: () => Promise<{ error?: string } | void>, after?: () => void) {
     setError(null);
@@ -39,7 +52,11 @@ export function CategoriesSettings({ categories }: { categories: Category[] }) {
   }
 
   function removeCategory(id: string) {
-    if (!confirm(t("cat.confirmDelete"))) return;
+    if (armedId !== id) {
+      setArmedId(id);
+      return;
+    }
+    setArmedId(null);
     const fd = new FormData();
     fd.set("id", id);
     run(() => deleteCategory(fd), () => toast(t("toast.deleted")));
@@ -53,9 +70,9 @@ export function CategoriesSettings({ categories }: { categories: Category[] }) {
     <div className="px-5 pt-5 pb-8 flex flex-col gap-4">
       {error ? <p role="alert" className="text-sm text-neg">{error}</p> : null}
 
-      <CategoryGroup heading={t("cat.expense")} color="neg" items={expense} onRemove={removeCategory} pending={pending} />
-      <CategoryGroup heading={t("cat.income")} color="pos" items={income} onRemove={removeCategory} pending={pending} />
-      <CategoryGroup heading={t("cat.investment")} color="teal" items={investment} onRemove={removeCategory} pending={pending} />
+      <CategoryGroup heading={t("cat.expense")} color="neg" items={expense} onRemove={removeCategory} pending={pending} usage={usage} armedId={armedId} />
+      <CategoryGroup heading={t("cat.income")} color="pos" items={income} onRemove={removeCategory} pending={pending} usage={usage} armedId={armedId} />
+      <CategoryGroup heading={t("cat.investment")} color="teal" items={investment} onRemove={removeCategory} pending={pending} usage={usage} armedId={armedId} />
 
       {/* Add form */}
       <Card className="p-4 flex flex-col gap-3">
@@ -137,13 +154,18 @@ function CategoryGroup({
   items,
   onRemove,
   pending,
+  usage,
+  armedId,
 }: {
   heading: string;
   color: keyof typeof COLOR;
   items: Category[];
   onRemove: (id: string) => void;
   pending: boolean;
+  usage: Record<string, number>;
+  armedId: string | null;
 }) {
+  const { t } = useI18n();
   if (items.length === 0) return null;
   const theme = COLOR[color];
   return (
@@ -161,14 +183,27 @@ function CategoryGroup({
             >
               <CategoryGlyph icon={c.icon} className="w-4 h-4" style={{ color: c.color }} />
             </span>
-            <p className="min-w-0 flex-1 truncate text-sm">{c.name}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm">{c.name}</p>
+              <p className="text-xs text-ink-muted">
+                {armedId === c.id
+                  ? t("cat.deleteHint")
+                  : t("cat.usage", { n: usage[c.id] ?? 0 })}
+              </p>
+            </div>
             <button
+              type="button"
               onClick={() => onRemove(c.id)}
               disabled={pending}
-              aria-label={`Delete category ${c.name}`}
-              className="text-ink-muted transition-colors duration-200 hover:text-neg disabled:opacity-40 cursor-pointer"
+              aria-label={`${t("common.delete")} ${c.name}`}
+              className={`flex h-10 min-w-10 flex-none items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors duration-200 disabled:opacity-40 cursor-pointer ${
+                armedId === c.id
+                  ? "bg-neg text-white"
+                  : "text-ink-muted hover:bg-neg/10 hover:text-neg"
+              }`}
             >
               <TrashIcon className="w-4 h-4" />
+              {armedId === c.id ? t("cat.armDelete") : null}
             </button>
           </div>
         ))}

@@ -163,7 +163,7 @@ export function Settings({
             </span>
             <span className="flex-1 min-w-0">
               <span className="block text-sm font-medium">{t("cat.title")}</span>
-              <span className="block text-xs text-ink-muted">รายรับ · รายจ่าย · ลงทุน</span>
+              <span className="block text-xs text-ink-muted">{t("cat.subtitle")}</span>
             </span>
             <ChevronRightIcon className="w-4 h-4 text-ink-muted flex-none" />
           </Link>
