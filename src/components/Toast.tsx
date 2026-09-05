@@ -28,7 +28,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={i.id}
             role="status"
-            className={`pointer-events-auto max-w-sm rounded-xl px-4 py-2.5 text-sm font-medium shadow-card backdrop-blur-lg ${
+            className={`pointer-events-auto max-w-sm animate-toast-in rounded-xl px-4 py-2.5 text-sm font-medium shadow-card backdrop-blur-lg ${
               i.tone === "error"
                 ? "bg-neg/90 text-white"
                 : "border border-line bg-bg-panel2/95 text-ink"

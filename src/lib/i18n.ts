@@ -75,6 +75,11 @@ const en: Dict = {
   "tx.collapseNote": "Close",
   "tx.saving": "Saving…",
   "tx.saveChanges": "Save changes",
+  "tx.saveAndAdd": "Save + add another",
+  "tx.deleteTx": "Delete transaction",
+  "tx.confirmDeleteTap": "Tap again to delete",
+  "tx.noCategories": "No categories for this type yet.",
+  "tx.manageCategories": "Add one in Categories",
 
   // insights
   "ins.title": "Insights",
@@ -193,7 +198,6 @@ const en: Dict = {
   "common.edit": "Edit",
   "common.delete": "Delete",
   "common.uncategorized": "Uncategorized",
-  "tx.confirmDelete": "Delete this transaction?",
   "date.today": "Today",
   "date.yesterday": "Yesterday",
   "export.none": "No transactions in this range.",
@@ -274,6 +278,11 @@ const th: Dict = {
   "tx.collapseNote": "ปิด",
   "tx.saving": "กำลังบันทึก…",
   "tx.saveChanges": "บันทึกการแก้ไข",
+  "tx.saveAndAdd": "บันทึกแล้วเพิ่มต่อ",
+  "tx.deleteTx": "ลบรายการ",
+  "tx.confirmDeleteTap": "แตะอีกครั้งเพื่อลบ",
+  "tx.noCategories": "ยังไม่มีหมวดหมู่ของประเภทนี้",
+  "tx.manageCategories": "ไปเพิ่มที่หมวดหมู่",
 
   // insights
   "ins.title": "วิเคราะห์",
@@ -391,7 +400,6 @@ const th: Dict = {
   "common.edit": "แก้ไข",
   "common.delete": "ลบ",
   "common.uncategorized": "ไม่มีหมวดหมู่",
-  "tx.confirmDelete": "ลบรายการนี้?",
   "date.today": "วันนี้",
   "date.yesterday": "เมื่อวาน",
   "export.none": "ช่วงนี้ไม่มีรายการ",

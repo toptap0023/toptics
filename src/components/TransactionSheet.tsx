@@ -2,13 +2,21 @@
 
 import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Category, TransactionView, Wallet } from "@/lib/types";
 import { todayISO } from "@/lib/format";
 import {
   createTransaction,
+  deleteTransaction,
   updateTransaction,
 } from "@/app/(app)/actions";
-import { CategoryGlyph, CloseIcon, ExpandIcon, PlusIcon } from "@/components/icons";
+import {
+  CategoryGlyph,
+  CloseIcon,
+  ExpandIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@/components/icons";
 import { useI18n } from "@/components/LanguageProvider";
 import { useToast } from "@/components/Toast";
 
@@ -104,7 +112,13 @@ export function TransactionSheet({
   const [noteExpanded, setNoteExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // "Save and add another": keep the sheet open for batch entry. A ref, not
+  // state, because the click and the form action fire in the same event.
+  const addAnotherRef = useRef(false);
+  // Two-tap delete: first tap arms, second tap (within 3s) deletes.
+  const [armed, setArmed] = useState(false);
   const firstFieldRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const noteOverlayRef = useRef<HTMLDivElement>(null);
 
   // The header stays pinned to the top; only cap the editor band to the visual
@@ -139,6 +153,8 @@ export function TransactionSheet({
   useEffect(() => {
     if (open) {
       setError(null);
+      setArmed(false);
+      addAnotherRef.current = false;
       setTypeView(
         initial?.type === "expense" && initial?.category?.is_investment
           ? "investment"
@@ -162,9 +178,38 @@ export function TransactionSheet({
     }
   }, [open, initial, defaultDate]);
 
+  useEffect(() => {
+    if (!armed) return;
+    const id = setTimeout(() => setArmed(false), 3000);
+    return () => clearTimeout(id);
+  }, [armed]);
+
+  function handleDelete() {
+    if (!initial) return;
+    if (!armed) {
+      setArmed(true);
+      return;
+    }
+    const fd = new FormData();
+    fd.set("id", initial.id);
+    startTransition(async () => {
+      const res = await deleteTransaction(fd);
+      if (res?.error) {
+        setError(res.error);
+        setArmed(false);
+        return;
+      }
+      toast(t("toast.deleted"));
+      setOpen(false);
+      router.refresh();
+    });
+  }
+
   function handleSubmit(formData: FormData) {
     formData.set("type", typeView === "income" ? "income" : "expense");
     formData.set("occurred_on", date);
+    const keepOpen = addAnotherRef.current;
+    addAnotherRef.current = false;
     startTransition(async () => {
       const res = isEdit
         ? await updateTransaction(formData)
@@ -175,7 +220,16 @@ export function TransactionSheet({
       }
       if (!isEdit) rememberDate(date);
       toast(t(isEdit ? "toast.saved" : "toast.added"));
-      setOpen(false);
+      if (keepOpen) {
+        // Batch entry: keep type and date, clear the per-item fields.
+        formRef.current?.reset();
+        setSelectedCat("");
+        setNote("");
+        setError(null);
+        firstFieldRef.current?.focus();
+      } else {
+        setOpen(false);
+      }
       router.refresh();
     });
   }
@@ -203,10 +257,14 @@ export function TransactionSheet({
           aria-label={isEdit ? t("tx.edit") : t("tx.add")}
         >
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setOpen(false)}
           />
-          <div className="relative flex w-full flex-col sm:max-w-md bg-bg-soft border-t sm:border border-line sm:rounded-2xl rounded-t-2xl shadow-card max-h-[92dvh] overflow-hidden">
+          <div className="relative flex w-full flex-col sm:max-w-md bg-bg-soft border-t sm:border border-line sm:rounded-2xl rounded-t-2xl shadow-card max-h-[92dvh] overflow-hidden animate-sheet-up">
+            <div
+              aria-hidden="true"
+              className="mx-auto mt-2 h-1 w-9 flex-none rounded-full bg-line sm:hidden"
+            />
             <div className="flex flex-none items-center justify-between px-5 py-4 border-b border-line">
               <h2 className="text-lg font-bold">
                 {isEdit ? t("tx.edit") : t("tx.new")}
@@ -221,6 +279,7 @@ export function TransactionSheet({
             </div>
 
             <form
+              ref={formRef}
               action={handleSubmit}
               className="flex flex-1 flex-col overflow-hidden"
             >
@@ -290,6 +349,17 @@ export function TransactionSheet({
                   {t("tx.category")}
                 </span>
                 <input type="hidden" name="category_id" value={selectedCat} />
+                {filteredCategories.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-line px-4 py-3 text-sm text-ink-muted">
+                    {t("tx.noCategories")}{" "}
+                    <Link
+                      href="/settings/categories"
+                      className="font-medium text-teal hover:underline"
+                    >
+                      {t("tx.manageCategories")}
+                    </Link>
+                  </p>
+                ) : null}
                 <div className="grid grid-cols-4 gap-2">
                   {filteredCategories.map((c) => {
                     const active = selectedCat === c.id;
@@ -400,17 +470,46 @@ export function TransactionSheet({
                   paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
                 }}
               >
-                <button
-                  type="submit"
-                  disabled={pending}
-                  className="w-full rounded-xl bg-teal px-4 py-3.5 font-semibold text-bg shadow-glow transition-colors duration-200 hover:bg-teal-dark disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {pending
-                    ? t("tx.saving")
-                    : isEdit
-                      ? t("tx.saveChanges")
-                      : t("tx.add")}
-                </button>
+                <div className="flex gap-2">
+                  {isEdit ? (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={pending}
+                      aria-label={t("tx.deleteTx")}
+                      className={`flex flex-none items-center justify-center gap-1.5 rounded-xl border px-4 py-3.5 text-sm font-semibold transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer ${
+                        armed
+                          ? "border-neg bg-neg text-white"
+                          : "border-neg/40 bg-neg/10 text-neg hover:bg-neg/20"
+                      }`}
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                      {armed ? t("tx.confirmDeleteTap") : t("common.delete")}
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={pending}
+                      onClick={() => {
+                        addAnotherRef.current = true;
+                      }}
+                      className="flex-1 rounded-xl border border-teal/50 bg-teal/10 px-3 py-3.5 text-sm font-semibold text-teal transition-colors duration-200 hover:bg-teal/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      {t("tx.saveAndAdd")}
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={pending}
+                    className="flex-1 rounded-xl bg-teal px-4 py-3.5 font-semibold text-bg shadow-glow transition-colors duration-200 hover:bg-teal-dark disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {pending
+                      ? t("tx.saving")
+                      : isEdit
+                        ? t("tx.saveChanges")
+                        : t("tx.add")}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
