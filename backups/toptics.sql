@@ -471,7 +471,6 @@ begin
     )
         returns jsonb
         language sql
-        set search_path to ''
     as $$
         select graphql.resolve(
             query := query,
@@ -3658,6 +3657,7 @@ db83c3d0-59fb-41dd-b489-18bbec67874b	7caa1992-85c0-4586-ab7a-89754bc37f70	c78d13
 COPY auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at, id) FROM stdin;
 89edc986-7e11-4a99-8556-5185a536ae90	89edc986-7e11-4a99-8556-5185a536ae90	{"sub": "89edc986-7e11-4a99-8556-5185a536ae90", "email": "tre.thitipat@gmail.com", "email_verified": true, "phone_verified": false}	email	2026-06-18 16:30:58.676126+00	2026-06-18 16:30:58.676183+00	2026-06-18 16:30:58.676183+00	b68c79ca-2666-4679-aac3-1ca9d557351c
 7caa1992-85c0-4586-ab7a-89754bc37f70	7caa1992-85c0-4586-ab7a-89754bc37f70	{"sub": "7caa1992-85c0-4586-ab7a-89754bc37f70", "email": "nannatthamat@gmail.com", "email_verified": true, "phone_verified": false}	email	2026-06-19 09:23:32.441726+00	2026-06-19 09:23:32.441777+00	2026-06-19 09:23:32.441777+00	48627ae1-b683-42dc-b5dd-ba70e30d5b01
+f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	{"sub": "f083d5c6-7664-4a76-a0d3-1c5dfd49ea86", "email": "10xiconkaset.ai+uxtest@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-09-05 05:23:02.852175+00	2026-09-05 05:23:02.852218+00	2026-09-05 05:23:02.852218+00	62bb8749-7cb5-4350-8518-75e2c71bb41b
 \.
 
 
@@ -3688,6 +3688,7 @@ bcef162c-5374-4683-b45f-4b69b36e3897	2026-07-07 18:19:15.332216+00	2026-07-07 18
 916c4622-5d1b-4427-acce-9bb4c983de63	2026-07-31 04:35:34.843949+00	2026-07-31 04:35:34.843949+00	password	e70298ad-3fe3-4feb-9dfc-d40c5d8fa154
 7e816d19-5366-46b1-8705-50decf0dc5a5	2026-08-02 14:37:02.988146+00	2026-08-02 14:37:02.988146+00	password	b768cade-f8e5-4e0c-bba5-0b9ba573a322
 56618dc6-40fb-489d-9651-af89924a8e8e	2026-08-10 17:15:11.678868+00	2026-08-10 17:15:11.678868+00	password	8c774a12-d0dc-43e5-b19b-cbb01b253682
+6f979162-72c4-485e-bc85-688744538128	2026-09-05 05:33:29.143738+00	2026-09-05 05:33:29.143738+00	password	0b6b2ff4-fcd1-4a76-9276-3b1269b50b6e
 \.
 
 
@@ -3745,6 +3746,7 @@ COPY auth.oauth_consents (id, user_id, client_id, scopes, granted_at, revoked_at
 
 COPY auth.one_time_tokens (id, user_id, token_type, token_hash, relates_to, created_at, updated_at) FROM stdin;
 6ed10000-fd52-4bd1-a6f9-3fc3af5092d4	89edc986-7e11-4a99-8556-5185a536ae90	recovery_token	pkce_a6520a32c7e467ca1f59dbabe1ee0805aa906573b7890ebf93cb2e44	tre.thitipat@gmail.com	2026-06-19 06:41:36.705552	2026-06-19 06:41:36.705552
+eebfc831-afdf-47d2-99bc-78c7ce7bb12c	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	confirmation_token	baa0713f436d704ab179c15fb8c87b07092cc5e53bd8b137ff18e71f	10xiconkaset.ai+uxtest@gmail.com	2026-09-05 05:23:05.490064	2026-09-05 05:23:05.490064
 \.
 
 
@@ -3861,7 +3863,10 @@ COPY auth.refresh_tokens (instance_id, id, token, user_id, revoked, created_at, 
 00000000-0000-0000-0000-000000000000	127	6ydxq7r35na6	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-16 18:15:25.017172+00	2026-08-24 06:56:21.277969+00	rqc2m2julf72	f1187015-e8db-44dd-8929-4a47e190f014
 00000000-0000-0000-0000-000000000000	128	jxjnxwyrpvwd	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-08-24 06:56:21.285865+00	2026-09-01 03:19:34.75233+00	6ydxq7r35na6	f1187015-e8db-44dd-8929-4a47e190f014
 00000000-0000-0000-0000-000000000000	129	omlfg6ovs7pj	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-09-01 03:19:34.770796+00	2026-09-02 02:33:18.87527+00	jxjnxwyrpvwd	f1187015-e8db-44dd-8929-4a47e190f014
-00000000-0000-0000-0000-000000000000	130	6nwl6e5q6wq3	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-09-02 02:33:18.892592+00	2026-09-02 02:33:18.892592+00	omlfg6ovs7pj	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	130	6nwl6e5q6wq3	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-09-02 02:33:18.892592+00	2026-09-04 12:10:31.222985+00	omlfg6ovs7pj	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	131	dkn7tu6354tt	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-09-04 12:10:31.243073+00	2026-09-05 02:38:52.332093+00	6nwl6e5q6wq3	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	132	njynpkgrbw3x	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-09-05 02:38:52.348507+00	2026-09-05 02:38:52.348507+00	dkn7tu6354tt	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	133	cnyenv6zfnv4	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-09-05 05:33:29.138305+00	2026-09-05 05:33:29.138305+00	\N	6f979162-72c4-485e-bc85-688744538128
 \.
 
 
@@ -3980,11 +3985,12 @@ bcef162c-5374-4683-b45f-4b69b36e3897	89edc986-7e11-4a99-8556-5185a536ae90	2026-0
 7d3c05c8-595e-4948-8e12-2893585c7d32	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-19 12:00:18.773296+00	2026-06-19 17:26:04.088219+00	\N	aal1	\N	2026-06-19 17:26:04.088112	Next.js Middleware	49.230.59.39	\N	\N	\N	\N	\N
 e756307f-3418-4110-bdf3-efd5e11bf316	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-20 06:21:00.062722+00	2026-06-20 14:58:11.663986+00	\N	aal1	\N	2026-06-20 14:58:11.663854	Vercel Edge Functions	18.141.143.40	\N	\N	\N	\N	\N
 244e8039-cd4d-49d4-a090-6a756f668db7	89edc986-7e11-4a99-8556-5185a536ae90	2026-07-07 18:57:04.703142+00	2026-08-15 17:20:03.041513+00	\N	aal1	\N	2026-08-15 17:20:03.041384	Vercel Edge Functions	54.169.49.174	\N	\N	\N	\N	\N
-f1187015-e8db-44dd-8929-4a47e190f014	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-23 03:50:47.319628+00	2026-09-02 02:33:18.923714+00	\N	aal1	\N	2026-09-02 02:33:18.923607	Vercel Edge Functions	54.255.123.166	\N	\N	\N	\N	\N
 1f35033d-bc59-460b-8a82-f37f60c9d80d	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-22 06:39:51.643206+00	2026-06-22 07:41:00.275026+00	\N	aal1	\N	2026-06-22 07:41:00.274899	Next.js Middleware	171.98.227.16	\N	\N	\N	\N	\N
 024f29d9-d78c-4c57-bf05-d47c84100daf	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-19 11:43:42.007684+00	2026-06-22 12:14:54.983175+00	\N	aal1	\N	2026-06-22 12:14:54.983073	Vercel Edge Functions	13.229.198.201	\N	\N	\N	\N	\N
 0f2868ef-982f-488b-8a70-73e5693a6ff4	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-22 12:40:25.050776+00	2026-06-23 00:57:00.460997+00	\N	aal1	\N	2026-06-23 00:57:00.460872	Vercel Edge Functions	13.212.216.240	\N	\N	\N	\N	\N
+f1187015-e8db-44dd-8929-4a47e190f014	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-23 03:50:47.319628+00	2026-09-05 02:38:52.377538+00	\N	aal1	\N	2026-09-05 02:38:52.377427	Vercel Edge Functions	54.169.188.202	\N	\N	\N	\N	\N
 a4f7f143-15bc-4031-b823-b313b2693e40	7caa1992-85c0-4586-ab7a-89754bc37f70	2026-06-20 10:57:46.184738+00	2026-07-20 05:46:39.673489+00	\N	aal1	\N	2026-07-20 05:46:39.673397	Vercel Edge Functions	3.0.89.99	\N	\N	\N	\N	\N
+6f979162-72c4-485e-bc85-688744538128	89edc986-7e11-4a99-8556-5185a536ae90	2026-09-05 05:33:29.120067+00	2026-09-05 05:33:29.120067+00	\N	aal1	\N	\N	node	171.98.229.123	\N	\N	\N	\N	\N
 \.
 
 
@@ -4010,7 +4016,8 @@ COPY auth.sso_providers (id, resource_id, created_at, updated_at, disabled) FROM
 
 COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, invited_at, confirmation_token, confirmation_sent_at, recovery_token, recovery_sent_at, email_change_token_new, email_change, email_change_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, phone_change, phone_change_token, phone_change_sent_at, email_change_token_current, email_change_confirm_status, banned_until, reauthentication_token, reauthentication_sent_at, is_sso_user, deleted_at, is_anonymous) FROM stdin;
 00000000-0000-0000-0000-000000000000	7caa1992-85c0-4586-ab7a-89754bc37f70	authenticated	authenticated	nannatthamat@gmail.com	$2a$10$wQ0cvs/xc9drGlxpjGpfvur6waC/SZ.JOkhtGb5r/B5fvV2055Yxa	2026-06-19 09:23:48.880079+00	\N		2026-06-19 09:23:32.455766+00		\N			\N	2026-06-20 10:57:46.183579+00	{"provider": "email", "providers": ["email"]}	{"sub": "7caa1992-85c0-4586-ab7a-89754bc37f70", "email": "nannatthamat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-19 09:23:32.402465+00	2026-07-20 05:46:38.768952+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	89edc986-7e11-4a99-8556-5185a536ae90	authenticated	authenticated	tre.thitipat@gmail.com	$2a$10$QgbAASk6F4Oc.bhIrfPdD.qe4P5vnQtY5eb8WRLzOA83D/3NHBNk2	2026-06-18 16:31:25.147218+00	\N		2026-06-18 16:30:58.687866+00	pkce_a6520a32c7e467ca1f59dbabe1ee0805aa906573b7890ebf93cb2e44	2026-06-19 06:41:33.947066+00			\N	2026-08-10 17:15:11.599738+00	{"provider": "email", "providers": ["email"]}	{"sub": "89edc986-7e11-4a99-8556-5185a536ae90", "email": "tre.thitipat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-18 16:30:58.656575+00	2026-09-02 02:33:18.906948+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	authenticated	authenticated	10xiconkaset.ai+uxtest@gmail.com	$2a$10$9RAM/Mp5FzAIKMK19I6xsuL4.p6TTDFHposwTLCwxfeKRd.dQNgbW	\N	\N	baa0713f436d704ab179c15fb8c87b07092cc5e53bd8b137ff18e71f	2026-09-05 05:23:02.854901+00		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"sub": "f083d5c6-7664-4a76-a0d3-1c5dfd49ea86", "email": "10xiconkaset.ai+uxtest@gmail.com", "email_verified": false, "phone_verified": false}	\N	2026-09-05 05:23:02.828386+00	2026-09-05 05:23:05.478202+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	89edc986-7e11-4a99-8556-5185a536ae90	authenticated	authenticated	tre.thitipat@gmail.com	$2a$10$QgbAASk6F4Oc.bhIrfPdD.qe4P5vnQtY5eb8WRLzOA83D/3NHBNk2	2026-06-18 16:31:25.147218+00	\N		2026-06-18 16:30:58.687866+00	pkce_a6520a32c7e467ca1f59dbabe1ee0805aa906573b7890ebf93cb2e44	2026-06-19 06:41:33.947066+00			\N	2026-09-05 05:33:29.118093+00	{"provider": "email", "providers": ["email"]}	{"sub": "89edc986-7e11-4a99-8556-5185a536ae90", "email": "tre.thitipat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-18 16:30:58.656575+00	2026-09-05 05:33:29.141866+00	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
 
@@ -4072,6 +4079,24 @@ d297da52-dafd-497b-9d94-b35a9e459bf6	89edc986-7e11-4a99-8556-5185a536ae90	Health
 416dafe3-4639-4c7c-9cb3-08c497dcd9c3	89edc986-7e11-4a99-8556-5185a536ae90	กองทุน	expense	#36a8d8	coins	2026-06-22 06:38:46.28796+00	21	t
 e80a6385-b9f0-4990-99d4-29cf9bd3cc81	89edc986-7e11-4a99-8556-5185a536ae90	กองทุนลดหย่อน	expense	#30d158	shield	2026-06-22 06:38:46.28796+00	22	t
 a9ade0d9-1624-44bc-8a2f-b95fc7e8c5c0	89edc986-7e11-4a99-8556-5185a536ae90	คริปโต	expense	#e0a13a	crypto	2026-06-22 06:38:46.28796+00	23	t
+99846a16-bc92-4952-b4c3-e5cddbdef10c	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Salary	income	#34c759	wallet	2026-09-05 05:23:02.825593+00	0	f
+63f49d02-7ef1-4d4f-8929-59a64d9e4191	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Other income	income	#30d158	plus	2026-09-05 05:23:02.825593+00	1	f
+21fb180a-421d-49cf-9da4-fdc30845910a	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Food	expense	#ff9f0a	food	2026-09-05 05:23:02.825593+00	0	f
+31e92e38-5a4c-4b7e-b9a1-1fcb3bb7b4ff	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Expenses	expense	#8e8e93	expenses	2026-09-05 05:23:02.825593+00	1	f
+2f9ef684-4eda-4fe2-864e-3a696e13c103	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Shopping	expense	#ff375f	shopping	2026-09-05 05:23:02.825593+00	2	f
+8166a058-0c84-4212-a5ad-b753dd5c28d2	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Transport	expense	#0a84ff	transport	2026-09-05 05:23:02.825593+00	3	f
+f7d480e2-caa8-44ae-9483-3f36130cb81c	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Sport	expense	#30d158	sport	2026-09-05 05:23:02.825593+00	4	f
+75a9f04b-ea0a-4193-a5d3-587e783111dc	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	นวด	expense	#bf5af2	massage	2026-09-05 05:23:02.825593+00	5	f
+5cc90c2b-74e9-4707-a27b-65abcfc244e9	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Sport items	expense	#ffd60a	ball	2026-09-05 05:23:02.825593+00	6	f
+89691145-e545-4f50-924d-cd30d8745f79	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Petrol cost	expense	#ff453a	fuel	2026-09-05 05:23:02.825593+00	7	f
+af373e2d-835b-42fc-9b7b-88f37eac31e5	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Housing	expense	#5e5ce6	housing	2026-09-05 05:23:02.825593+00	8	f
+1df3d7dc-a882-4344-9f08-81743cff48df	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Cat	expense	#ac8e68	cat	2026-09-05 05:23:02.825593+00	9	f
+93e696c8-cec9-46ff-bbe9-fe077dba91a8	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Family	expense	#64d2ff	family	2026-09-05 05:23:02.825593+00	10	f
+e5d214fb-fa7b-4e3e-9af7-5a9b68b05d3d	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	หุ้น	expense	#6d5ef0	chart	2026-09-05 05:23:02.825593+00	20	t
+d90d77ee-8013-4265-8299-60dce6c4b2f4	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	กองทุน	expense	#36a8d8	coins	2026-09-05 05:23:02.825593+00	21	t
+581f90f3-276d-4eaa-8abb-b4c7bd48eda1	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	กองทุนลดหย่อน	expense	#30d158	shield	2026-09-05 05:23:02.825593+00	22	t
+e106f50b-0745-4aa5-b6ee-062cf490a115	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	คริปโต	expense	#e0a13a	crypto	2026-09-05 05:23:02.825593+00	23	t
+a2cc6640-09c7-4905-8252-9ead8dd20270	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	อื่นๆ (ลงทุน)	expense	#98989f	tag	2026-09-05 05:23:02.825593+00	24	t
 \.
 
 
@@ -4880,6 +4905,7 @@ c54a3323-0b44-4f48-8f09-df271fb21ba2	89edc986-7e11-4a99-8556-5185a536ae90	101033
 669bc446-a033-4eb3-9d9a-8b4a236fa734	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	e2b526ce-c774-4a51-bb6f-07a4dee1c45f	expense	1080.00	Imported	2026-08-31	2026-09-01 03:56:19.821436+00
 026555f7-aa93-4dae-8e35-ed7bbc3a055f	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	8a0195f1-224d-429e-b862-9362a01cfe51	income	94977.00	\N	2026-08-25	2026-09-01 03:57:26.504312+00
 0cc117e4-a25d-4791-a956-bbd4c1c679cb	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	fc3a1433-b054-4c89-b67f-f9e0ae82cd93	expense	2615.00	Imported	2026-08-31	2026-09-01 03:56:19.821436+00
+1a7ba3fc-ff2c-429e-9140-b095aaa01a3d	89edc986-7e11-4a99-8556-5185a536ae90	10103310-0099-4dc2-82f2-deed19c33f36	e80a6385-b9f0-4990-99d4-29cf9bd3cc81	expense	30000.00	SCBTB(ThaiESGA) bond 30,000 thbราคา 10.50	2026-09-04	2026-09-04 12:12:01.454276+00
 \.
 
 
@@ -4890,6 +4916,7 @@ c54a3323-0b44-4f48-8f09-df271fb21ba2	89edc986-7e11-4a99-8556-5185a536ae90	101033
 COPY public.wallets (id, user_id, name, currency, starting_balance, color, created_at) FROM stdin;
 399e2c60-9094-47e2-8188-4c253e0e835e	7caa1992-85c0-4586-ab7a-89754bc37f70	Cash	THB	0.00	#19c2a8	2026-06-19 09:23:32.401158+00
 10103310-0099-4dc2-82f2-deed19c33f36	89edc986-7e11-4a99-8556-5185a536ae90	Investment	THB	0.00	#19c2a8	2026-06-18 16:30:58.656232+00
+7c2fd4c9-b672-4af5-9c59-d151d920982b	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	Cash	THB	0.00	#19c2a8	2026-09-05 05:23:02.825593+00
 \.
 
 
@@ -5147,7 +5174,7 @@ COPY vault.secrets (id, name, description, secret, key_id, nonce, created_at, up
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: -
 --
 
-SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 130, true);
+SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 133, true);
 
 
 --
