@@ -3865,8 +3865,9 @@ COPY auth.refresh_tokens (instance_id, id, token, user_id, revoked, created_at, 
 00000000-0000-0000-0000-000000000000	129	omlfg6ovs7pj	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-09-01 03:19:34.770796+00	2026-09-02 02:33:18.87527+00	jxjnxwyrpvwd	f1187015-e8db-44dd-8929-4a47e190f014
 00000000-0000-0000-0000-000000000000	130	6nwl6e5q6wq3	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-09-02 02:33:18.892592+00	2026-09-04 12:10:31.222985+00	omlfg6ovs7pj	f1187015-e8db-44dd-8929-4a47e190f014
 00000000-0000-0000-0000-000000000000	131	dkn7tu6354tt	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-09-04 12:10:31.243073+00	2026-09-05 02:38:52.332093+00	6nwl6e5q6wq3	f1187015-e8db-44dd-8929-4a47e190f014
-00000000-0000-0000-0000-000000000000	132	njynpkgrbw3x	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-09-05 02:38:52.348507+00	2026-09-05 02:38:52.348507+00	dkn7tu6354tt	f1187015-e8db-44dd-8929-4a47e190f014
 00000000-0000-0000-0000-000000000000	133	cnyenv6zfnv4	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-09-05 05:33:29.138305+00	2026-09-05 05:33:29.138305+00	\N	6f979162-72c4-485e-bc85-688744538128
+00000000-0000-0000-0000-000000000000	132	njynpkgrbw3x	89edc986-7e11-4a99-8556-5185a536ae90	t	2026-09-05 02:38:52.348507+00	2026-09-08 05:17:52.474789+00	dkn7tu6354tt	f1187015-e8db-44dd-8929-4a47e190f014
+00000000-0000-0000-0000-000000000000	134	5copwxku3432	89edc986-7e11-4a99-8556-5185a536ae90	f	2026-09-08 05:17:52.495242+00	2026-09-08 05:17:52.495242+00	njynpkgrbw3x	f1187015-e8db-44dd-8929-4a47e190f014
 \.
 
 
@@ -3976,6 +3977,7 @@ COPY auth.schema_migrations (version) FROM stdin;
 --
 
 COPY auth.sessions (id, user_id, created_at, updated_at, factor_id, aal, not_after, refreshed_at, user_agent, ip, tag, oauth_client_id, refresh_token_hmac_key, refresh_token_counter, scopes) FROM stdin;
+f1187015-e8db-44dd-8929-4a47e190f014	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-23 03:50:47.319628+00	2026-09-08 05:17:52.523965+00	\N	aal1	\N	2026-09-08 05:17:52.523851	Vercel Edge Functions	18.141.143.219	\N	\N	\N	\N	\N
 33e549db-7fdf-4165-bf16-48b5f8999d4a	89edc986-7e11-4a99-8556-5185a536ae90	2026-07-31 04:35:32.897666+00	2026-07-31 04:35:32.897666+00	\N	aal1	\N	\N	Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.24012.9 Chrome/148.0.7778.280 Electron/42.7.0 Safari/537.36	183.88.230.141	\N	\N	\N	\N	\N
 916c4622-5d1b-4427-acce-9bb4c983de63	89edc986-7e11-4a99-8556-5185a536ae90	2026-07-31 04:35:34.840956+00	2026-07-31 04:35:34.840956+00	\N	aal1	\N	\N	Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.24012.9 Chrome/148.0.7778.280 Electron/42.7.0 Safari/537.36	183.88.230.141	\N	\N	\N	\N	\N
 7e816d19-5366-46b1-8705-50decf0dc5a5	89edc986-7e11-4a99-8556-5185a536ae90	2026-08-02 14:37:02.922106+00	2026-08-02 14:37:02.922106+00	\N	aal1	\N	\N	node	27.145.137.211	\N	\N	\N	\N	\N
@@ -3988,7 +3990,6 @@ e756307f-3418-4110-bdf3-efd5e11bf316	89edc986-7e11-4a99-8556-5185a536ae90	2026-0
 1f35033d-bc59-460b-8a82-f37f60c9d80d	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-22 06:39:51.643206+00	2026-06-22 07:41:00.275026+00	\N	aal1	\N	2026-06-22 07:41:00.274899	Next.js Middleware	171.98.227.16	\N	\N	\N	\N	\N
 024f29d9-d78c-4c57-bf05-d47c84100daf	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-19 11:43:42.007684+00	2026-06-22 12:14:54.983175+00	\N	aal1	\N	2026-06-22 12:14:54.983073	Vercel Edge Functions	13.229.198.201	\N	\N	\N	\N	\N
 0f2868ef-982f-488b-8a70-73e5693a6ff4	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-22 12:40:25.050776+00	2026-06-23 00:57:00.460997+00	\N	aal1	\N	2026-06-23 00:57:00.460872	Vercel Edge Functions	13.212.216.240	\N	\N	\N	\N	\N
-f1187015-e8db-44dd-8929-4a47e190f014	89edc986-7e11-4a99-8556-5185a536ae90	2026-06-23 03:50:47.319628+00	2026-09-05 02:38:52.377538+00	\N	aal1	\N	2026-09-05 02:38:52.377427	Vercel Edge Functions	54.169.188.202	\N	\N	\N	\N	\N
 a4f7f143-15bc-4031-b823-b313b2693e40	7caa1992-85c0-4586-ab7a-89754bc37f70	2026-06-20 10:57:46.184738+00	2026-07-20 05:46:39.673489+00	\N	aal1	\N	2026-07-20 05:46:39.673397	Vercel Edge Functions	3.0.89.99	\N	\N	\N	\N	\N
 6f979162-72c4-485e-bc85-688744538128	89edc986-7e11-4a99-8556-5185a536ae90	2026-09-05 05:33:29.120067+00	2026-09-05 05:33:29.120067+00	\N	aal1	\N	\N	node	171.98.229.123	\N	\N	\N	\N	\N
 \.
@@ -4017,7 +4018,7 @@ COPY auth.sso_providers (id, resource_id, created_at, updated_at, disabled) FROM
 COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, invited_at, confirmation_token, confirmation_sent_at, recovery_token, recovery_sent_at, email_change_token_new, email_change, email_change_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, phone_change, phone_change_token, phone_change_sent_at, email_change_token_current, email_change_confirm_status, banned_until, reauthentication_token, reauthentication_sent_at, is_sso_user, deleted_at, is_anonymous) FROM stdin;
 00000000-0000-0000-0000-000000000000	7caa1992-85c0-4586-ab7a-89754bc37f70	authenticated	authenticated	nannatthamat@gmail.com	$2a$10$wQ0cvs/xc9drGlxpjGpfvur6waC/SZ.JOkhtGb5r/B5fvV2055Yxa	2026-06-19 09:23:48.880079+00	\N		2026-06-19 09:23:32.455766+00		\N			\N	2026-06-20 10:57:46.183579+00	{"provider": "email", "providers": ["email"]}	{"sub": "7caa1992-85c0-4586-ab7a-89754bc37f70", "email": "nannatthamat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-19 09:23:32.402465+00	2026-07-20 05:46:38.768952+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	f083d5c6-7664-4a76-a0d3-1c5dfd49ea86	authenticated	authenticated	10xiconkaset.ai+uxtest@gmail.com	$2a$10$9RAM/Mp5FzAIKMK19I6xsuL4.p6TTDFHposwTLCwxfeKRd.dQNgbW	\N	\N	baa0713f436d704ab179c15fb8c87b07092cc5e53bd8b137ff18e71f	2026-09-05 05:23:02.854901+00		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"sub": "f083d5c6-7664-4a76-a0d3-1c5dfd49ea86", "email": "10xiconkaset.ai+uxtest@gmail.com", "email_verified": false, "phone_verified": false}	\N	2026-09-05 05:23:02.828386+00	2026-09-05 05:23:05.478202+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	89edc986-7e11-4a99-8556-5185a536ae90	authenticated	authenticated	tre.thitipat@gmail.com	$2a$10$QgbAASk6F4Oc.bhIrfPdD.qe4P5vnQtY5eb8WRLzOA83D/3NHBNk2	2026-06-18 16:31:25.147218+00	\N		2026-06-18 16:30:58.687866+00	pkce_a6520a32c7e467ca1f59dbabe1ee0805aa906573b7890ebf93cb2e44	2026-06-19 06:41:33.947066+00			\N	2026-09-05 05:33:29.118093+00	{"provider": "email", "providers": ["email"]}	{"sub": "89edc986-7e11-4a99-8556-5185a536ae90", "email": "tre.thitipat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-18 16:30:58.656575+00	2026-09-05 05:33:29.141866+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	89edc986-7e11-4a99-8556-5185a536ae90	authenticated	authenticated	tre.thitipat@gmail.com	$2a$10$QgbAASk6F4Oc.bhIrfPdD.qe4P5vnQtY5eb8WRLzOA83D/3NHBNk2	2026-06-18 16:31:25.147218+00	\N		2026-06-18 16:30:58.687866+00	pkce_a6520a32c7e467ca1f59dbabe1ee0805aa906573b7890ebf93cb2e44	2026-06-19 06:41:33.947066+00			\N	2026-09-05 05:33:29.118093+00	{"provider": "email", "providers": ["email"]}	{"sub": "89edc986-7e11-4a99-8556-5185a536ae90", "email": "tre.thitipat@gmail.com", "email_verified": true, "phone_verified": false}	\N	2026-06-18 16:30:58.656575+00	2026-09-08 05:17:52.505913+00	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
 
@@ -5174,7 +5175,7 @@ COPY vault.secrets (id, name, description, secret, key_id, nonce, created_at, up
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: -
 --
 
-SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 133, true);
+SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 134, true);
 
 
 --
